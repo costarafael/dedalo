@@ -1,7 +1,6 @@
 "use client"
 
 import { ThemeProvider } from "next-themes"
-import { useEffect, useState } from "react"
 import { useQueryState } from "nuqs"
 import * as React from "react"
 import { NuqsAdapter } from "nuqs/adapters/next/app"
@@ -58,38 +57,6 @@ function FeatureFlagsProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [isReady, setIsReady] = useState(false)
-
-  useEffect(() => {
-    async function initMocks() {
-      if (typeof window === 'undefined') {
-        setIsReady(true)
-        return
-      }
-
-      if (process.env.NEXT_PUBLIC_API_MOCKING === 'enabled') {
-        try {
-          const { worker } = await import("@/mocks/browser")
-          await worker.start({
-            onUnhandledRequest: 'bypass',
-            quiet: true
-          })
-          console.log('MSW inicializado com sucesso')
-        } catch (error) {
-          console.error('Erro ao inicializar MSW:', error)
-        }
-      }
-      
-      setIsReady(true)
-    }
-
-    initMocks()
-  }, [])
-
-  if (!isReady) {
-    return null
-  }
-
   return (
     <ThemeProvider
       attribute="class"
