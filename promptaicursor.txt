@@ -1,7 +1,0 @@
-Quero que ajude a resolver um problema que está ocorrendo no nosso projeto. Vou relatá-lo.
-
-Ao ativarmos o modo Advanced Table, temos uma mudança na data table toolbar, que passa a oferecer duas funções, Filtros e Ordenar . Ao clicar em qualquer delas abri-se uma especie de popover com o botão "Adicionar Filtro" em Filtros, e "Adicionar Ordenação" em Ordenar.
-
-O problema é que ao clicarmos em no botão adicionar de qualquer uma das duas funções, o elemento que seria o filtro ou a ordenação a ser configurada, aparece apenas por milesimos de segundo, como se fosse fechada. O popover continua aberto, posso clicar em "adicionar ordenação" ou "adicionar filtro" milhares de vezes, tudo o que irá acontecer é o elemento "piscar" na tela ao invés de fato permanecer no popover para que eu consiga seguir o fluxo.
-
-Isso não acontece no projeto original. Nele funciona como esperado.
