@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { DataTable } from "@/components/ui/data-table"
 import { columns } from "./columns"
-import { createBrowserClient } from "@/lib/supabase-server"
+import { getBrowserClient } from "@/lib/database/supabase"
 import { AddModuleDialog } from "./add-module-dialog"
 import type { Module } from "./columns"
 
@@ -12,7 +12,7 @@ export default function ModulesPage() {
 
   useEffect(() => {
     async function fetchModules() {
-      const supabase = createBrowserClient()
+      const supabase = getBrowserClient()
       const { data, error } = await supabase
         .from("modules")
         .select("*")

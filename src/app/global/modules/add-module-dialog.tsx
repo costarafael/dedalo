@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { createBrowserClient } from "@/lib/supabase-server"
+import { getBrowserClient } from "@/lib/database/supabase"
 
 function slugify(text: string) {
   return text
@@ -39,7 +39,7 @@ export function AddModuleDialog() {
     
     if (!name.trim()) return
 
-    const supabase = createBrowserClient()
+    const supabase = getBrowserClient()
 
     const now = new Date().toISOString()
     const moduleData = {

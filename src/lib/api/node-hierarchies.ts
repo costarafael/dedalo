@@ -1,11 +1,11 @@
-import { getSupabaseClient } from '@/lib/supabase'
+import { getBrowserClient } from '@/lib/database/supabase'
 import type { Database } from '@/types/supabase'
 
 export type NodeHierarchyRule = Database['public']['Tables']['node_hierarchy_rules']['Row']
 export type NewNodeHierarchyRule = Database['public']['Tables']['node_hierarchy_rules']['Insert']
 
 export async function createNodeHierarchyRule(rule: NewNodeHierarchyRule) {
-  const supabase = getSupabaseClient()
+  const supabase = getBrowserClient()
   const { data, error } = await supabase
     .from('node_hierarchy_rules')
     .insert(rule)
@@ -17,7 +17,7 @@ export async function createNodeHierarchyRule(rule: NewNodeHierarchyRule) {
 }
 
 export async function getNodeHierarchyRules(clientId: string) {
-  const supabase = getSupabaseClient()
+  const supabase = getBrowserClient()
   const { data, error } = await supabase
     .from('node_hierarchy_rules')
     .select(`
@@ -33,7 +33,7 @@ export async function getNodeHierarchyRules(clientId: string) {
 }
 
 export async function updateNodeHierarchyRule(id: string, rule: Partial<NodeHierarchyRule>) {
-  const supabase = getSupabaseClient()
+  const supabase = getBrowserClient()
   const { data, error } = await supabase
     .from('node_hierarchy_rules')
     .update(rule)
@@ -46,7 +46,7 @@ export async function updateNodeHierarchyRule(id: string, rule: Partial<NodeHier
 }
 
 export async function deleteNodeHierarchyRule(id: string) {
-  const supabase = getSupabaseClient()
+  const supabase = getBrowserClient()
   const { error } = await supabase
     .from('node_hierarchy_rules')
     .update({ deleted_at: new Date().toISOString() })

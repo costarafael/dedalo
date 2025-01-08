@@ -1,7 +1,7 @@
-import { createServerClient } from "@/lib/supabase-server"
+import { getServerClient } from "@/lib/database/supabase"
 
 export async function getModules() {
-  const supabase = createServerClient()
+  const supabase = getServerClient()
 
   const { data: modules, error } = await supabase
     .from("modules")

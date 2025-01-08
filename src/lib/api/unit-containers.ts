@@ -1,4 +1,4 @@
-import { getSupabaseClient } from '@/lib/supabase'
+import { getBrowserClient } from '@/lib/database/supabase'
 import type { Database } from '@/types/supabase'
 
 export type UnitContainer = Database['public']['Tables']['unit_containers']['Row'] & {
@@ -11,7 +11,7 @@ export type UnitContainerItem = Database['public']['Tables']['unit_container_ite
 export type NewUnitContainerItem = Database['public']['Tables']['unit_container_items']['Insert']
 
 export async function createUnitContainer(container: Partial<NewUnitContainer>, unitIds: string[]) {
-  const supabase = getSupabaseClient()
+  const supabase = getBrowserClient()
   try {
     // Inicia uma transação
     const { data: insertData, error: insertError } = await supabase
@@ -60,7 +60,7 @@ export async function createUnitContainer(container: Partial<NewUnitContainer>, 
 }
 
 export async function getUnitContainers(clientId: string) {
-  const supabase = getSupabaseClient()
+  const supabase = getBrowserClient()
   
   console.log('Fetching unit containers for client:', clientId)
   
@@ -97,7 +97,7 @@ export async function getUnitContainers(clientId: string) {
 }
 
 export async function updateUnitContainer(id: string, container: Partial<UnitContainer>) {
-  const supabase = getSupabaseClient()
+  const supabase = getBrowserClient()
   const { data, error } = await supabase
     .from('unit_containers')
     .update(container)
@@ -110,7 +110,7 @@ export async function updateUnitContainer(id: string, container: Partial<UnitCon
 }
 
 export async function deleteUnitContainer(id: string) {
-  const supabase = getSupabaseClient()
+  const supabase = getBrowserClient()
   const { error } = await supabase
     .from('unit_containers')
     .update({ deleted_at: new Date().toISOString() })
@@ -120,7 +120,7 @@ export async function deleteUnitContainer(id: string) {
 }
 
 export async function addUnitToContainer(containerId: string, unitId: string) {
-  const supabase = getSupabaseClient()
+  const supabase = getBrowserClient()
   const newItem: NewUnitContainerItem = {
     id: crypto.randomUUID(),
     container_id: containerId,
@@ -140,7 +140,7 @@ export async function addUnitToContainer(containerId: string, unitId: string) {
 }
 
 export async function removeUnitFromContainer(containerId: string, unitId: string) {
-  const supabase = getSupabaseClient()
+  const supabase = getBrowserClient()
   const { error } = await supabase
     .from('unit_container_items')
     .delete()

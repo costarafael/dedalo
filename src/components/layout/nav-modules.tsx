@@ -24,7 +24,7 @@ import {
 import { ModuleSwitcher } from "@/components/layout/module-switcher"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { createBrowserClient } from "@/lib/supabase-server"
+import { getBrowserClient } from '@/lib/database/supabase'
 import { useToast } from "@/components/ui/use-toast"
 import { usePathname } from "next/navigation"
 
@@ -65,7 +65,7 @@ export function NavModules() {
     async function fetchModules() {
       setLoading(true)
       try {
-        const supabase = createBrowserClient()
+        const supabase = getBrowserClient()
         const { data, error } = await supabase
           .from("modules")
           .select("*")

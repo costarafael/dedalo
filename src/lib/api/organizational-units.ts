@@ -1,12 +1,11 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { getBrowserClient } from '@/lib/database/supabase'
 import type { Database } from '@/types/supabase'
-
-const supabase = createClientComponentClient<Database>()
 
 export type OrganizationalUnit = Database['public']['Tables']['organizational_units']['Row']
 export type NewOrganizationalUnit = Database['public']['Tables']['organizational_units']['Insert']
 
 export async function getRootUnit(clientId: string): Promise<OrganizationalUnit | null> {
+  const supabase = getBrowserClient()
   const { data, error } = await supabase
     .from('organizational_units')
     .select('*')
@@ -27,6 +26,8 @@ export async function getRootUnit(clientId: string): Promise<OrganizationalUnit 
 }
 
 export async function createOrganizationalUnit(unit: NewOrganizationalUnit) {
+  const supabase = getBrowserClient()
+  
   // Se for ROOT, verificar se já existe
   if (unit.type === "ROOT") {
     const { data: existingRoot } = await supabase
@@ -67,6 +68,7 @@ export async function createOrganizationalUnit(unit: NewOrganizationalUnit) {
 }
 
 export async function getOrganizationalUnits(clientId: string): Promise<OrganizationalUnit[]> {
+  const supabase = getBrowserClient()
   const { data, error } = await supabase
     .from('organizational_units')
     .select('*')
@@ -79,6 +81,7 @@ export async function getOrganizationalUnits(clientId: string): Promise<Organiza
 }
 
 export async function updateOrganizationalUnit(id: string, unit: Partial<OrganizationalUnit>) {
+  const supabase = getBrowserClient()
   const { data, error } = await supabase
     .from('organizational_units')
     .update(unit)
@@ -91,10 +94,11 @@ export async function updateOrganizationalUnit(id: string, unit: Partial<Organiz
 }
 
 export async function deleteOrganizationalUnit(id: string) {
+  const supabase = getBrowserClient()
   const { error } = await supabase
     .from('organizational_units')
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', id)
 
   if (error) throw error
-} 
+}

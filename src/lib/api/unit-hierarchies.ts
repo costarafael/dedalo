@@ -1,12 +1,12 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { getBrowserClient } from '@/lib/database/supabase'
 import type { Database } from '@/types/supabase'
-
-const supabase = createClientComponentClient<Database>()
 
 export type UnitHierarchy = Database['public']['Tables']['unit_hierarchies']['Row']
 export type NewUnitHierarchy = Database['public']['Tables']['unit_hierarchies']['Insert']
 
 export async function createUnitHierarchy(hierarchy: NewUnitHierarchy) {
+  const supabase = getBrowserClient()
+  
   // Se for uma hierarquia primária, desativar outras hierarquias primárias
   if (hierarchy.is_primary) {
     const { data: existingPrimaryHierarchies } = await supabase
@@ -55,6 +55,7 @@ export async function createUnitHierarchy(hierarchy: NewUnitHierarchy) {
 }
 
 export async function getUnitHierarchies(clientId: string): Promise<UnitHierarchy[]> {
+  const supabase = getBrowserClient()
   const { data, error } = await supabase
     .from('unit_hierarchies')
     .select(`
@@ -70,6 +71,7 @@ export async function getUnitHierarchies(clientId: string): Promise<UnitHierarch
 }
 
 export async function updateUnitHierarchy(id: string, hierarchy: Partial<UnitHierarchy>) {
+  const supabase = getBrowserClient()
   const { data, error } = await supabase
     .from('unit_hierarchies')
     .update(hierarchy)
@@ -82,6 +84,7 @@ export async function updateUnitHierarchy(id: string, hierarchy: Partial<UnitHie
 }
 
 export async function deleteUnitHierarchy(id: string) {
+  const supabase = getBrowserClient()
   const { error } = await supabase
     .from('unit_hierarchies')
     .update({ deleted_at: new Date().toISOString() })

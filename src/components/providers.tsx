@@ -56,11 +56,17 @@ function FeatureFlagsProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ 
+  children,
+  defaultTheme = "system" 
+}: { 
+  children: React.ReactNode
+  defaultTheme?: string 
+}) {
   return (
     <ThemeProvider
       attribute="class"
-      defaultTheme="system"
+      defaultTheme={defaultTheme}
       enableSystem
       disableTransitionOnChange
     >

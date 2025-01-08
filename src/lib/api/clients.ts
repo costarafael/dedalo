@@ -1,104 +1,71 @@
-import { createClientSchema } from "@/lib/validations/client"
-import { createClient as createSupabaseClient } from "@supabase/supabase-js"
-import { Database } from "@/types/supabase"
-import { z } from "zod"
-
-const supabase = createSupabaseClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
-type Entity = Database["public"]["Tables"]["Entity"]["Row"]
-type EntityInsert = Database["public"]["Tables"]["Entity"]["Insert"]
+import { getBrowserClient } from '@/lib/database/supabase'
 
 export async function getClients() {
-  try {
-    console.log("Buscando clientes...")
-    const { data, error } = await supabase
-      .from("Entity")
-      .select("*")
-      .eq("type", "CLIENT")
-      .is("deleted_at", null)
+  const supabase = getBrowserClient()
+  const { data, error } = await supabase
+    .from('Entity')
+    .select('*')
+    .eq('type', 'CLIENT')
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
 
-    if (error) throw error
-
-    console.log("Clientes encontrados:", data)
-    return data
-  } catch (error) {
-    console.error("Erro ao buscar clientes:", error)
-    throw error
-  }
+  if (error) throw error
+  return data
 }
 
-export async function createClient(values: z.infer<typeof createClientSchema>) {
-  try {
-    const now = new Date().toISOString()
-    
-    // Primeiro, gera o ID usando a função do banco
-    const { data: generatedId, error: idError } = await supabase
-      .rpc('generate_entity_id', {
-        name: values.name,
-        entity_type: 'CLIENT'
-      })
+export async function getClient(id: string) {
+  const supabase = getBrowserClient()
+  const { data, error } = await supabase
+    .from('Entity')
+    .select('*')
+    .eq('id', id)
+    .eq('type', 'CLIENT')
+    .is('deleted_at', null)
+    .single()
 
-    if (idError) throw idError
-
-    const newClient: EntityInsert = {
-      id: generatedId,
-      name: values.name,
-      type: "CLIENT",
-      created_at: now,
-      updated_at: now
-    }
-
-    const { data, error } = await supabase
-      .from("Entity")
-      .insert(newClient)
-      .select()
-      .single()
-
-    if (error) throw error
-
-    return data
-  } catch (error) {
-    console.error("Erro ao criar cliente:", error)
-    throw error
-  }
+  if (error) throw error
+  return data
 }
 
-export async function updateClient(id: string, values: z.infer<typeof createClientSchema>) {
-  try {
-    const updates: Partial<Entity> = {
-      name: values.name,
-      updated_at: new Date().toISOString()
-    }
+export async function createClient(data: any) {
+  const supabase = getBrowserClient()
+  
+  const { data: newClient, error } = await supabase
+    .from('Entity')
+    .insert({
+      name: data.name,
+      type: 'CLIENT',
+      entity_type: 'INTERNAL'
+    })
+    .select()
+    .single()
 
-    const { data, error } = await supabase
-      .from("Entity")
-      .update(updates)
-      .eq("id", id)
-      .select()
-      .single()
+  if (error) throw error
+  return newClient
+}
 
-    if (error) throw error
+export async function updateClient(id: string, data: any) {
+  const supabase = getBrowserClient()
+  const { data: updatedClient, error } = await supabase
+    .from('Entity')
+    .update(data)
+    .eq('id', id)
+    .eq('type', 'CLIENT')
+    .select()
+    .single()
 
-    return data
-  } catch (error) {
-    console.error("Erro ao atualizar cliente:", error)
-    throw error
-  }
+  if (error) throw error
+  return updatedClient
 }
 
 export async function deleteClient(id: string) {
-  try {
-    const { error } = await supabase
-      .from("Entity")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", id)
+  const supabase = getBrowserClient()
+  // Soft delete
+  const { error } = await supabase
+    .from('Entity')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('type', 'CLIENT')
 
-    if (error) throw error
-  } catch (error) {
-    console.error("Erro ao deletar cliente:", error)
-    throw error
-  }
+  if (error) throw error
 } 

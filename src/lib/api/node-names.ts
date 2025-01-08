@@ -1,12 +1,11 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { getBrowserClient } from '@/lib/database/supabase'
 import type { Database } from '@/types/supabase'
-
-const supabase = createClientComponentClient<Database>()
 
 export type NodeName = Database['public']['Tables']['node_names']['Row']
 export type NewNodeName = Database['public']['Tables']['node_names']['Insert']
 
 export async function createNodeName(node: Partial<NewNodeName> & { client_id: string, name: string }) {
+  const supabase = getBrowserClient()
   const { data, error } = await supabase
     .from('node_names')
     .insert({
@@ -30,6 +29,7 @@ export async function createNodeName(node: Partial<NewNodeName> & { client_id: s
 }
 
 export async function getNodeNames(clientId: string): Promise<NodeName[]> {
+  const supabase = getBrowserClient()
   const { data, error } = await supabase
     .from('node_names')
     .select('*')
@@ -42,6 +42,7 @@ export async function getNodeNames(clientId: string): Promise<NodeName[]> {
 }
 
 export async function updateNodeOrder(nodes: NodeName[]) {
+  const supabase = getBrowserClient()
   const updates = nodes.map((node, index) => ({
     id: node.id,
     client_id: node.client_id,
@@ -58,6 +59,7 @@ export async function updateNodeOrder(nodes: NodeName[]) {
 }
 
 export async function updateNodeName(id: string, node: Partial<NodeName>) {
+  const supabase = getBrowserClient()
   const { data, error } = await supabase
     .from('node_names')
     .update({
@@ -73,6 +75,7 @@ export async function updateNodeName(id: string, node: Partial<NodeName>) {
 }
 
 export async function deleteNodeName(id: string) {
+  const supabase = getBrowserClient()
   const { error } = await supabase
     .from('node_names')
     .update({
