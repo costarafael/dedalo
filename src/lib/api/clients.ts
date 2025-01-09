@@ -1,11 +1,12 @@
 import { getBrowserClient } from '@/lib/database/supabase'
+import { ContextType } from '@/lib/core/interfaces'
 
 export async function getClients() {
   const supabase = getBrowserClient()
   const { data, error } = await supabase
     .from('Entity')
     .select('*')
-    .eq('type', 'CLIENT')
+    .eq('type', ContextType.CLIENT)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
@@ -19,7 +20,7 @@ export async function getClient(id: string) {
     .from('Entity')
     .select('*')
     .eq('id', id)
-    .eq('type', 'CLIENT')
+    .eq('type', ContextType.CLIENT)
     .is('deleted_at', null)
     .single()
 
@@ -34,8 +35,10 @@ export async function createClient(data: any) {
     .from('Entity')
     .insert({
       name: data.name,
-      type: 'CLIENT',
-      entity_type: 'INTERNAL'
+      type: ContextType.CLIENT,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      deleted_at: null
     })
     .select()
     .single()
@@ -48,9 +51,12 @@ export async function updateClient(id: string, data: any) {
   const supabase = getBrowserClient()
   const { data: updatedClient, error } = await supabase
     .from('Entity')
-    .update(data)
+    .update({
+      ...data,
+      updated_at: new Date().toISOString()
+    })
     .eq('id', id)
-    .eq('type', 'CLIENT')
+    .eq('type', ContextType.CLIENT)
     .select()
     .single()
 
@@ -63,9 +69,12 @@ export async function deleteClient(id: string) {
   // Soft delete
   const { error } = await supabase
     .from('Entity')
-    .update({ deleted_at: new Date().toISOString() })
+    .update({ 
+      deleted_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
     .eq('id', id)
-    .eq('type', 'CLIENT')
+    .eq('type', ContextType.CLIENT)
 
   if (error) throw error
 } 
