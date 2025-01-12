@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,26 +18,19 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { createProvider } from "@/lib/api/providers"
-import { getClients } from "@/lib/api/clients"
-import { getProvidersByClient } from "@/lib/api/providers"
+import { getProviderService } from "@/lib/services/provider"
+import { getClientService } from "@/lib/services/client"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Plus } from "lucide-react"
+import { Building2, Loader2, Plus, Store, Users } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
-import { useEffect, useState } from "react"
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Provider } from "@/types/provider"
-import { Client } from "@/types/client"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useRouter } from "next/navigation"
+import { cn } from "@/lib/utils"
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -42,110 +38,115 @@ const formSchema = z.object({
   parent_provider_id: z.string().optional(),
 })
 
-type Props = {
-  onProviderCreated?: () => void
-}
+type FormData = z.infer<typeof formSchema>
 
-export function NewProviderDialog({ onProviderCreated }: Props) {
+export function NewProviderDialog() {
   const [open, setOpen] = useState(false)
-  const [clients, setClients] = useState<Client[]>([])
-  const [providers, setProviders] = useState<Provider[]>([])
+  const [clients, setClients] = useState<any[]>([])
+  const [providers, setProviders] = useState<any[]>([])
   const [selectedClient, setSelectedClient] = useState<string>("")
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       client_id: "",
-      parent_provider_id: "",
+      parent_provider_id: undefined,
     },
   })
 
-  useEffect(() => {
-    async function loadClients() {
-      try {
-        const data = await getClients()
-        setClients(data || [])
-      } catch (error) {
-        console.error("Erro ao carregar clientes:", error)
-        toast.error("Erro ao carregar clientes")
-      }
-    }
-    loadClients()
-  }, [])
-
-  useEffect(() => {
-    async function loadProviders() {
-      if (!selectedClient) {
-        setProviders([])
-        return
-      }
-      try {
-        const data = await getProvidersByClient(selectedClient)
-        setProviders(data || [])
-      } catch (error) {
-        console.error("Erro ao carregar providers:", error)
-        toast.error("Erro ao carregar providers")
-      }
-    }
-    loadProviders()
-  }, [selectedClient])
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function loadData() {
     try {
-      await createProvider(values)
-      toast.success("Provider criado com sucesso!")
+      const clientService = getClientService()
+      const clientsData = await clientService.findAll()
+      setClients(clientsData)
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error)
+      toast.error("Erro ao carregar dados")
+    }
+  }
+
+  async function loadProviders(clientId: string) {
+    try {
+      const providerService = getProviderService()
+      const providersData = await providerService.getByClient(clientId)
+      setProviders(providersData)
+    } catch (error) {
+      console.error("Erro ao carregar fornecedores:", error)
+      toast.error("Erro ao carregar fornecedores")
+    }
+  }
+
+  async function onSubmit(data: FormData) {
+    try {
+      setIsLoading(true)
+      const providerService = getProviderService()
+      await providerService.create({
+        name: data.name,
+        client_id: data.client_id,
+        parent_provider_id: data.parent_provider_id,
+      })
+
+      toast.success("Fornecedor criado com sucesso")
       setOpen(false)
       form.reset()
-      onProviderCreated?.()
+      router.refresh()
     } catch (error) {
-      console.error("Erro ao criar provider:", error)
-      toast.error("Erro ao criar provider")
+      console.error("Erro ao criar fornecedor:", error)
+      toast.error("Erro ao criar fornecedor")
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      setOpen(isOpen)
+      if (isOpen) {
+        loadData()
+      } else {
+        form.reset()
+        setProviders([])
+        setSelectedClient("")
+      }
+    }}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
-          Novo Provider
+          Novo fornecedor
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Criar novo provider</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Store className="h-5 w-5" />
+            Criar novo fornecedor
+          </DialogTitle>
           <DialogDescription>
-            Preencha as informações para criar um novo provider
+            Preencha os dados do fornecedor. Você pode criar um fornecedor independente ou vinculá-lo a outro fornecedor existente.
           </DialogDescription>
         </DialogHeader>
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome do provider" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="client_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cliente</FormLabel>
-                  <Select 
+                  <FormLabel className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4" />
+                    Cliente
+                  </FormLabel>
+                  <Select
                     onValueChange={(value) => {
                       field.onChange(value)
                       setSelectedClient(value)
-                      // Limpa o provider pai ao trocar de cliente
-                      form.setValue("parent_provider_id", "")
+                      loadProviders(value)
+                      // Limpa o provider pai quando troca de cliente
+                      form.setValue('parent_provider_id', undefined)
                     }}
                     value={field.value}
                   >
@@ -162,41 +163,82 @@ export function NewProviderDialog({ onProviderCreated }: Props) {
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormDescription>
+                    Selecione o cliente ao qual este fornecedor pertencerá
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            {selectedClient && providers.length > 0 && (
-              <FormField
-                control={form.control}
-                name="parent_provider_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Provider Pai (Opcional)</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um provider pai" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {providers.map((provider) => (
-                          <SelectItem key={provider.id} value={provider.id}>
-                            {provider.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Store className="h-4 w-4" />
+                    Nome
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="Nome do fornecedor" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Nome que identificará o fornecedor no sistema
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="parent_provider_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Fornecedor pai
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={!selectedClient}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={selectedClient ? "Selecione um fornecedor pai" : "Primeiro selecione um cliente"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {providers.map((provider) => (
+                        <SelectItem key={provider.id} value={provider.id}>
+                          {provider.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Opcional. Selecione se este fornecedor fará parte da hierarquia de outro fornecedor
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <DialogFooter>
-              <Button type="submit">Criar Provider</Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setOpen(false)}
+                disabled={isLoading}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Criar fornecedor
+              </Button>
             </DialogFooter>
           </form>
         </Form>

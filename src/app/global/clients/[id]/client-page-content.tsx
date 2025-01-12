@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { deleteClient, updateClient } from "@/lib/api/clients"
+import { getClientService } from "@/lib/services/client"
 import { createClientSchema } from "@/lib/validations/client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
@@ -16,6 +16,7 @@ import * as z from "zod"
 import { OrganizationalUnitsManager } from "@/components/organizational-units/organizational-units-manager"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Building2, Loader2, Settings, Users, Boxes, Network } from "lucide-react"
+import { Entity } from "@/lib/core/interfaces"
 
 type FormData = z.infer<typeof createClientSchema>
 
@@ -25,7 +26,7 @@ interface Props {
 
 export function ClientPageContent({ id }: Props) {
   const router = useRouter()
-  const [client, setClient] = useState<any>(null)
+  const [client, setClient] = useState<Entity | null>(null)
   const [loading, setLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -37,14 +38,14 @@ export function ClientPageContent({ id }: Props) {
   useEffect(() => {
     async function loadClient() {
       try {
-        const response = await fetch(`/api/clients/${id}`)
-        if (!response.ok) throw new Error("Erro ao carregar cliente")
-        const data = await response.json()
+        const clientService = getClientService()
+        const data = await clientService.getById(id)
+        if (!data) throw new Error("Cliente não encontrado")
         setClient(data)
         form.reset({ name: data.name })
       } catch (error) {
         console.error("Erro ao carregar cliente:", error)
-        toast.error("Erro ao carregar cliente")
+        toast.error(error instanceof Error ? error.message : "Erro ao carregar cliente")
       } finally {
         setLoading(false)
       }
@@ -56,28 +57,30 @@ export function ClientPageContent({ id }: Props) {
   async function onSubmit(data: FormData) {
     try {
       setIsSaving(true)
-      await updateClient(id, data)
+      const clientService = getClientService()
+      await clientService.update(id, data)
       toast.success("Cliente atualizado com sucesso!")
       router.refresh()
     } catch (error) {
       console.error("Erro ao atualizar cliente:", error)
-      toast.error("Erro ao atualizar cliente")
+      toast.error(error instanceof Error ? error.message : "Erro ao atualizar cliente")
     } finally {
       setIsSaving(false)
     }
   }
 
   async function handleDelete() {
-    if (!window.confirm("Tem certeza que deseja remover este cliente?")) return
+    if (!confirm("Tem certeza que deseja remover este cliente?")) return
 
     try {
       setIsDeleting(true)
-      await deleteClient(id)
+      const clientService = getClientService()
+      await clientService.delete(id)
       toast.success("Cliente removido com sucesso!")
       router.push("/global/clients")
     } catch (error) {
       console.error("Erro ao remover cliente:", error)
-      toast.error("Erro ao remover cliente")
+      toast.error(error instanceof Error ? error.message : "Erro ao remover cliente")
     } finally {
       setIsDeleting(false)
     }

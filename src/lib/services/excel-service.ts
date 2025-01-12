@@ -2,7 +2,7 @@ import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import type { NodeName } from '@/lib/api/node-names'
 import type { OrganizationalUnit } from '@/lib/api/organizational-units'
-import type { UnitHierarchy } from '@/lib/api/unit-hierarchies'
+import type { UnitHierarchy } from '@/types/unit-hierarchy'
 
 interface ExportData {
   nodes: NodeName[]

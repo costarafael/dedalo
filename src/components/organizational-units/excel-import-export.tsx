@@ -10,7 +10,7 @@ import { exportToExcel, importFromExcel } from "@/lib/services/excel-service"
 import { toast } from "sonner"
 import type { NodeName } from "@/lib/api/node-names"
 import type { OrganizationalUnit } from "@/lib/api/organizational-units"
-import type { UnitHierarchy } from "@/lib/api/unit-hierarchies"
+import type { UnitHierarchy } from '@/types/unit-hierarchy'
 
 interface Props {
   clientId: string

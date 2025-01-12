@@ -18,9 +18,9 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
-import { getClients, updateClient } from "@/lib/api/clients"
+import { getClientService } from "@/lib/services/client"
 import { createClientSchema } from "@/lib/validations/client"
-import type { Client } from "@/lib/api/clients"
+import { Entity } from "@/lib/core/interfaces"
 
 const formSchema = createClientSchema
 
@@ -28,22 +28,21 @@ export default function EditClientPage() {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
-  const [client, setClient] = useState<Client | null>(null)
+  const [client, setClient] = useState<Entity | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: formSchema.parse({
       name: "",
-      email: "",
-    },
+    }),
   })
 
   useEffect(() => {
     async function loadClient() {
       try {
-        const clients = await getClients()
-        const client = clients.find(c => c.id === params.id)
+        const clientService = getClientService()
+        const client = await clientService.getById(params.id as string)
         if (!client) {
           toast({
             title: "Cliente não encontrado",
@@ -54,15 +53,14 @@ export default function EditClientPage() {
           return
         }
         setClient(client)
-        form.reset({
+        form.reset(formSchema.parse({
           name: client.name,
-          email: client.email,
-        })
+        }))
       } catch (error) {
         console.error('Erro ao carregar cliente:', error)
         toast({
           title: "Erro ao carregar cliente",
-          description: "Ocorreu um erro ao carregar os dados do cliente.",
+          description: error instanceof Error ? error.message : "Ocorreu um erro ao carregar os dados do cliente.",
           variant: "destructive",
         })
       } finally {
@@ -77,10 +75,8 @@ export default function EditClientPage() {
     if (!client) return
 
     try {
-      await updateClient(client.id, {
-        ...values,
-        updated_at: new Date().toISOString(),
-      })
+      const clientService = getClientService()
+      await clientService.update(client.id, values)
       
       toast({
         title: "Cliente atualizado",
@@ -129,19 +125,6 @@ export default function EditClientPage() {
                     <FormLabel>Nome</FormLabel>
                     <FormControl>
                       <Input placeholder="Digite o nome do cliente" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="Digite o email do cliente" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -1,26 +1,12 @@
 import { getBrowserClient } from '@/lib/database/supabase'
-import { Entity, IClientRepository, ContextType } from '../interfaces'
+import { Entity, IEntityRepository, ContextType } from '../interfaces'
 
-export class ClientRepository implements IClientRepository {
+export class EntityRepository implements IEntityRepository {
   async findAll(): Promise<Entity[]> {
     const supabase = getBrowserClient()
     const { data, error } = await supabase
       .from('Entity')
       .select('*')
-      .eq('type', ContextType.CLIENT)
-      .order('created_at', { ascending: false })
-
-    if (error) throw error
-    return data || []
-  }
-
-  async findActive(): Promise<Entity[]> {
-    const supabase = getBrowserClient()
-    const { data, error } = await supabase
-      .from('Entity')
-      .select('*')
-      .eq('type', ContextType.CLIENT)
-      .is('deleted_at', null)
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -33,21 +19,44 @@ export class ClientRepository implements IClientRepository {
       .from('Entity')
       .select('*')
       .eq('id', id)
-      .eq('type', ContextType.CLIENT)
       .single()
 
     if (error) throw error
     return data
   }
 
+  async findByType(type: ContextType): Promise<Entity[]> {
+    const supabase = getBrowserClient()
+    const { data, error } = await supabase
+      .from('Entity')
+      .select('*')
+      .eq('type', type)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  }
+
+  async findActiveByType(type: ContextType): Promise<Entity[]> {
+    const supabase = getBrowserClient()
+    const { data, error } = await supabase
+      .from('Entity')
+      .select('*')
+      .eq('type', type)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  }
+
   async create(data: Partial<Entity>): Promise<Entity> {
     const supabase = getBrowserClient()
-    const { data: newClient, error } = await supabase
+    const { data: newEntity, error } = await supabase
       .from('Entity')
       .insert({
         name: data.name,
-        type: ContextType.CLIENT,
-        entity_type: data.entity_type || 'INTERNAL',
+        type: data.type,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         deleted_at: null
@@ -56,36 +65,34 @@ export class ClientRepository implements IClientRepository {
       .single()
 
     if (error) throw error
-    return newClient
+    return newEntity
   }
 
   async update(id: string, data: Partial<Entity>): Promise<Entity> {
     const supabase = getBrowserClient()
-    const { data: updatedClient, error } = await supabase
+    const { data: updatedEntity, error } = await supabase
       .from('Entity')
       .update({
         ...data,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
-      .eq('type', ContextType.CLIENT)
       .select()
       .single()
 
     if (error) throw error
-    return updatedClient
+    return updatedEntity
   }
 
   async delete(id: string): Promise<void> {
     const supabase = getBrowserClient()
     const { error } = await supabase
       .from('Entity')
-      .update({ 
+      .update({
         deleted_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
-      .eq('type', ContextType.CLIENT)
 
     if (error) throw error
   }

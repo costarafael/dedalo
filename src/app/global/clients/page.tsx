@@ -2,24 +2,26 @@
 
 import { NewClientDialog } from "@/components/dialogs/new-client-dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getClients } from "@/lib/api/clients"
+import { getClientService } from "@/lib/services/client"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Building2 } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { Entity } from "@/lib/core/interfaces"
 
 export default function ClientsPage() {
-  const [clients, setClients] = useState<any[]>([])
+  const [clients, setClients] = useState<Entity[]>([])
   const [loading, setLoading] = useState(true)
 
   async function loadClients() {
     try {
-      const data = await getClients()
+      const clientService = getClientService()
+      const data = await clientService.getActiveClients()
       setClients(data || [])
     } catch (error) {
       console.error("Erro ao carregar clientes:", error)
-      toast.error("Erro ao carregar clientes")
+      toast.error(error instanceof Error ? error.message : "Erro ao carregar clientes")
     } finally {
       setLoading(false)
     }
@@ -65,9 +67,6 @@ export default function ClientsPage() {
               <CardContent>
                 <div className="text-sm text-muted-foreground space-y-1">
                   <p>ID: {client.id}</p>
-                  {client.description && (
-                    <p className="line-clamp-2">{client.description}</p>
-                  )}
                 </div>
               </CardContent>
             </Card>

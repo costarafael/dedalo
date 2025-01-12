@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
-import { getUnitContainers } from "@/lib/api/unit-containers"
+import { getUnitContainerService } from '@/lib/services/unit-container'
 
 import type { OrganizationalUnit } from "@/lib/api/organizational-units"
 import type { NodeName } from "@/lib/api/node-names"
@@ -36,9 +36,10 @@ export function UnitContainerManager({ clientId, nodes, units, onCreateContainer
   const loadContainers = useCallback(async () => {
     console.log('Loading containers for client:', clientId)
     try {
-      const data = await getUnitContainers(clientId)
-      console.log('Loaded containers:', data)
-      setContainers(data)
+      const unitContainerService = getUnitContainerService()
+      const containers = await unitContainerService.getClientContainersWithItems(clientId)
+      console.log('Loaded containers:', containers)
+      setContainers(containers)
     } catch (error) {
       console.error("Erro ao carregar containers:", error)
       toast.error("Erro ao carregar containers")

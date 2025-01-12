@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
-import { createClient } from "@/lib/api/clients"
+import { getClientService } from "@/lib/services/client"
 import { createClientSchema } from "@/lib/validations/client"
 
 const formSchema = createClientSchema
@@ -38,6 +38,7 @@ interface NewClientDialogProps {
 export function NewClientDialog({ onClientCreated }: NewClientDialogProps) {
   const [open, setOpen] = React.useState(false)
   const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,17 +47,20 @@ export function NewClientDialog({ onClientCreated }: NewClientDialogProps) {
     },
   })
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(data: z.infer<typeof formSchema>) {
     try {
-      await createClient(values)
+      setIsSubmitting(true)
+      const clientService = getClientService()
+      await clientService.create(data)
       toast.success("Cliente criado com sucesso!")
-      setOpen(false)
       form.reset()
+      setOpen(false)
       onClientCreated?.()
-      router.refresh()
     } catch (error) {
-      console.error('Erro ao criar cliente:', error)
-      toast.error("Erro ao criar cliente")
+      console.error("Erro ao criar cliente:", error)
+      toast.error(error instanceof Error ? error.message : "Erro ao criar cliente")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -88,8 +92,8 @@ export function NewClientDialog({ onClientCreated }: NewClientDialogProps) {
               )}
             />
             <DialogFooter>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Criando..." : "Criar Cliente"}
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Criando..." : "Criar Cliente"}
               </Button>
             </DialogFooter>
           </form>

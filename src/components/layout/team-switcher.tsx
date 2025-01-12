@@ -20,7 +20,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { getClientEntities, getProviderEntities, type Entity } from "@/lib/api/entities"
+import { getEntityService } from "@/lib/services/entity"
+import { Entity, ContextType } from "@/lib/core/interfaces"
 import { useToast } from "@/components/ui/use-toast"
 
 export default function TeamSwitcher() {
@@ -37,9 +38,10 @@ export default function TeamSwitcher() {
     async function fetchEntities() {
       setLoading(true)
       try {
+        const entityService = getEntityService()
         const [clientEntities, providerEntities] = await Promise.all([
-          getClientEntities(),
-          getProviderEntities()
+          entityService.getActiveByType(ContextType.CLIENT),
+          entityService.getActiveByType(ContextType.PROVIDER)
         ])
         
         setClients(clientEntities)

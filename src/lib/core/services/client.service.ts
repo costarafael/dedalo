@@ -3,7 +3,7 @@ import { Entity, IClientRepository, IClientService } from '../interfaces'
 export class ClientService implements IClientService {
   constructor(private readonly clientRepository: IClientRepository) {}
 
-  async getAll(): Promise<Entity[]> {
+  async findAll(): Promise<Entity[]> {
     return this.clientRepository.findAll()
   }
 

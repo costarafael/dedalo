@@ -1,0 +1,701 @@
+```mermaid
+erDiagram
+    Entity {
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text id PK "{NOT_NULL}"
+        text name "{NOT_NULL}"
+        ContextType type "<ADMIN,AGENCY,CLIENT,PROVIDER>"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+    }
+
+    Record {
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        text created_by FK "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text hierarchy_id 
+        character_varying id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        jsonb metadata 
+        text name "{NOT_NULL}"
+        text organizational_unit_id FK 
+        text status "{NOT_NULL}"
+        text template_id FK "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+        text updated_by FK 
+        integer version "{NOT_NULL}"
+    }
+
+    audit_logs {
+        text action "{NOT_NULL}"
+        AuditActionType actionType "{NOT_NULL} <CREATE,READ,UPDATE,DELETE,LOGIN,LOGOUT,EXPORT,IMPORT,SHARE,APPROVE,REJECT,CUSTOM>"
+        text context_id 
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        text entity_id "{NOT_NULL}"
+        text entity_type "{NOT_NULL}"
+        text hierarchy_id 
+        text id PK "{NOT_NULL}"
+        text ip_address 
+        jsonb metadata 
+        jsonb new_data 
+        jsonb previous_data 
+        GenericStatus status "{NOT_NULL} <SUCCESS,FAILURE,PENDING,CANCELLED,BLOCKED,FLAGGED>"
+        text user_agent 
+        text user_id FK "{NOT_NULL}"
+    }
+
+    component_library {
+        ComponentCategory category "{NOT_NULL} <DATA,FORM,LAYOUT,NAVIGATION,UTILITY,SECURITY,CUSTOM>"
+        jsonb config "{NOT_NULL}"
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text description 
+        character_varying id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        boolean is_latest_version "{NOT_NULL}"
+        jsonb metadata 
+        text name "{NOT_NULL}"
+        ComponentType type "{NOT_NULL} <FIELD,FILE,SIGNATURE,TOKEN_INPUT,CODE_EDITOR,CAMERA,DATE_RANGE,CUSTOM>"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+        text version "{NOT_NULL}"
+    }
+
+    container_node_names {
+        text container_id FK "{NOT_NULL}"
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text id PK "{NOT_NULL}"
+        boolean is_required "{NOT_NULL}"
+        integer item_count "{NOT_NULL}"
+        jsonb metadata 
+        text node_name_id FK "{NOT_NULL}"
+        integer order "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+    }
+
+    context_permissions {
+        timestamp_without_time_zone deleted_at 
+        text id PK "{NOT_NULL}"
+        boolean isActive "{NOT_NULL}"
+        text permission_id FK "{NOT_NULL}"
+        text scope_id FK "{NOT_NULL}"
+        ScopeType scope_type "{NOT_NULL} <MODULE,WORKFLOW,RECORD_TEMPLATE,COMPONENT,PROVIDER_HIERARCHY,ORGANIZATIONAL_UNIT,UNIT_CONTAINER>"
+        text user_context_id FK "{NOT_NULL}"
+    }
+
+    group_members {
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text group_id FK "{NOT_NULL}"
+        text id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        jsonb metadata 
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+        text user_id FK "{NOT_NULL}"
+    }
+
+    group_permissions {
+        timestamp_without_time_zone deleted_at 
+        text group_id FK "{NOT_NULL}"
+        text id PK "{NOT_NULL}"
+        boolean isActive "{NOT_NULL}"
+        text permission_id FK "{NOT_NULL}"
+        text scope_id FK "{NOT_NULL}"
+        ScopeType scope_type "{NOT_NULL} <MODULE,WORKFLOW,RECORD_TEMPLATE,COMPONENT,PROVIDER_HIERARCHY,ORGANIZATIONAL_UNIT,UNIT_CONTAINER>"
+    }
+
+    groups {
+        ContextType contextType "{NOT_NULL} <ADMIN,AGENCY,CLIENT,PROVIDER>"
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text description 
+        text entity_id 
+        text id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        jsonb metadata 
+        text name "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+    }
+
+    integration_logs {
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        text direction "{NOT_NULL}"
+        integer duration 
+        text error 
+        text id PK "{NOT_NULL}"
+        text integration_type "{NOT_NULL}"
+        jsonb metadata 
+        jsonb request_data 
+        jsonb response_data 
+        GenericStatus status "{NOT_NULL} <SUCCESS,FAILURE,PENDING,CANCELLED,BLOCKED,FLAGGED>"
+    }
+
+    module_components {
+        ComponentCategory category "{NOT_NULL} <DATA,FORM,LAYOUT,NAVIGATION,UTILITY,SECURITY,CUSTOM>"
+        jsonb config "{NOT_NULL}"
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        character_varying id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        boolean is_required "{NOT_NULL}"
+        text library_id FK 
+        jsonb metadata 
+        text module_id FK "{NOT_NULL}"
+        integer order "{NOT_NULL}"
+        ComponentType type "{NOT_NULL} <FIELD,FILE,SIGNATURE,TOKEN_INPUT,CODE_EDITOR,CAMERA,DATE_RANGE,CUSTOM>"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+    }
+
+    module_dependencies {
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        text dependency_id FK "{NOT_NULL}"
+        character_varying id PK "{NOT_NULL}"
+        boolean isRequired "{NOT_NULL}"
+        jsonb metadata 
+        text module_id FK "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+    }
+
+    module_instances {
+        text client_id "{NOT_NULL}"
+        jsonb config 
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        character_varying id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        jsonb metadata 
+        text module_id FK "{NOT_NULL}"
+        text source_id FK 
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+    }
+
+    module_organizational_scopes {
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        text id PK "{NOT_NULL}"
+        boolean is_required "{NOT_NULL}"
+        jsonb metadata 
+        text module_id FK "{NOT_NULL}"
+        ScopeType scopeType "{NOT_NULL} <MODULE,WORKFLOW,RECORD_TEMPLATE,COMPONENT,PROVIDER_HIERARCHY,ORGANIZATIONAL_UNIT,UNIT_CONTAINER>"
+        text scope_id FK "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+    }
+
+    modules {
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        character_varying description 
+        character_varying id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        boolean is_library "{NOT_NULL}"
+        jsonb metadata 
+        character_varying name "{NOT_NULL}"
+        character_varying slug "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+        integer version "{NOT_NULL}"
+    }
+
+    node_hierarchy_rules {
+        text child_node_id FK "{NOT_NULL}"
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text id PK "{NOT_NULL}"
+        boolean isRequired "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        jsonb metadata 
+        text parent_node_id FK "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+    }
+
+    node_names {
+        text client_id "{NOT_NULL}"
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text description 
+        text id PK "{NOT_NULL}"
+        boolean is_required "{NOT_NULL}"
+        boolean is_root 
+        jsonb metadata 
+        text name "{NOT_NULL}"
+        integer order "{NOT_NULL}"
+        integer unit_count "{NOT_NULL}"
+        UnitSelectionMode unit_selection_mode "{NOT_NULL} <single,multiple>"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+        HierarchyValidationType validationType "{NOT_NULL} <STRICT,FLEXIBLE,CUSTOM>"
+    }
+
+    organizational_units {
+        text client_id FK "{NOT_NULL}"
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        integer depth "{NOT_NULL}"
+        text full_path 
+        text id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        jsonb metadata 
+        text name "{NOT_NULL}"
+        text node_name_id FK "{NOT_NULL}"
+        integer order_index "{NOT_NULL}"
+        NodeType type "{NOT_NULL} <ROOT,CATEGORY,OPTION>"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+    }
+
+    performance_logs {
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        integer duration "{NOT_NULL}"
+        text id PK "{NOT_NULL}"
+        jsonb metadata 
+        text operation "{NOT_NULL}"
+        GenericStatus status "{NOT_NULL} <SUCCESS,FAILURE,PENDING,CANCELLED,BLOCKED,FLAGGED>"
+    }
+
+    permissions {
+        ARRAY contextTypes 
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text description 
+        text id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        jsonb metadata 
+        text name "{NOT_NULL}"
+        ARRAY scopeTypes 
+        text slug "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+    }
+
+    provider_hierarchies {
+        text client_id FK,UK 
+        timestamp_with_time_zone created_at "{NOT_NULL}"
+        timestamp_with_time_zone deleted_at 
+        ARRAY hierarchy_path 
+        text id PK "{NOT_NULL}"
+        boolean is_active 
+        integer level 
+        jsonb metadata 
+        text parent_provider_id FK,UK 
+        text provider_id FK,UK "{NOT_NULL}"
+        text root_provider_id FK 
+        timestamp_with_time_zone updated_at "{NOT_NULL}"
+        timestamp_with_time_zone valid_from 
+        timestamp_with_time_zone valid_to 
+        integer version 
+    }
+
+    provider_hierarchy_cache {
+        timestamp_with_time_zone created_at "{NOT_NULL}"
+        integer depth "{NOT_NULL}"
+        text hierarchy_id FK "{NOT_NULL}"
+        text id PK "{NOT_NULL}"
+        jsonb metadata 
+        timestamp_with_time_zone updated_at "{NOT_NULL}"
+    }
+
+    provider_hierarchy_history {
+        text changed_by FK 
+        timestamp_with_time_zone created_at "{NOT_NULL}"
+        text hierarchy_id FK "{NOT_NULL}"
+        text id PK "{NOT_NULL}"
+        jsonb metadata 
+        integer version "{NOT_NULL}"
+    }
+
+    provider_hierarchy_rules {
+        text client_id FK 
+        timestamp_with_time_zone created_at "{NOT_NULL}"
+        timestamp_with_time_zone deleted_at 
+        text id PK "{NOT_NULL}"
+        boolean is_active 
+        jsonb metadata 
+        integer priority 
+        timestamp_with_time_zone updated_at "{NOT_NULL}"
+        text validation_type 
+    }
+
+    record_files {
+        text bucket_path "{NOT_NULL}"
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text field_id FK "{NOT_NULL}"
+        integer fileSize "{NOT_NULL}"
+        text file_name "{NOT_NULL}"
+        text file_type "{NOT_NULL}"
+        text file_url "{NOT_NULL}"
+        text id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        jsonb metadata 
+        text record_id FK "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+    }
+
+    record_history {
+        jsonb changes "{NOT_NULL}"
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        text created_by FK "{NOT_NULL}"
+        text id PK "{NOT_NULL}"
+        jsonb metadata 
+        text record_id FK "{NOT_NULL}"
+        integer version "{NOT_NULL}"
+    }
+
+    record_organizational_units {
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        text id PK "{NOT_NULL}"
+        jsonb metadata 
+        text module_id FK 
+        text organizational_unit_id FK "{NOT_NULL}"
+        text record_id FK "{NOT_NULL}"
+        text scope_id "{NOT_NULL}"
+        ScopeType scope_type "{NOT_NULL} <MODULE,WORKFLOW,RECORD_TEMPLATE,COMPONENT,PROVIDER_HIERARCHY,ORGANIZATIONAL_UNIT,UNIT_CONTAINER>"
+    }
+
+    record_templates {
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        character_varying description 
+        character_varying id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        jsonb metadata 
+        text module_id FK "{NOT_NULL}"
+        character_varying name "{NOT_NULL}"
+        character_varying slug "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+        integer version "{NOT_NULL}"
+    }
+
+    record_values {
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text field_id FK "{NOT_NULL}"
+        text id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        jsonb metadata 
+        text module_id FK 
+        text record_id FK "{NOT_NULL}"
+        text templateId FK "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+        jsonb value "{NOT_NULL}"
+    }
+
+    security_logs {
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        jsonb details 
+        SecurityEventType eventType "{NOT_NULL} <LOGIN_ATTEMPT,PASSWORD_CHANGE,PERMISSION_CHANGE,API_KEY_GENERATED,TOKEN_GENERATED,ACCESS_DENIED,SUSPICIOUS_ACTIVITY>"
+        text id PK "{NOT_NULL}"
+        text ip_address "{NOT_NULL}"
+        jsonb metadata 
+        GenericStatus status "{NOT_NULL} <SUCCESS,FAILURE,PENDING,CANCELLED,BLOCKED,FLAGGED>"
+        text user_agent 
+        text user_id FK 
+    }
+
+    system_logs {
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        jsonb details 
+        text id PK "{NOT_NULL}"
+        LogLevel level "{NOT_NULL} <DEBUG,INFO,WARN,ERROR,FATAL>"
+        text message "{NOT_NULL}"
+        jsonb metadata 
+        text source "{NOT_NULL}"
+        text stack_trace 
+        text user_id FK 
+    }
+
+    template_fields {
+        jsonb config "{NOT_NULL}"
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        boolean is_required "{NOT_NULL}"
+        boolean is_unique "{NOT_NULL}"
+        text label "{NOT_NULL}"
+        jsonb metadata 
+        integer order "{NOT_NULL}"
+        text template_id FK "{NOT_NULL}"
+        FieldType type "{NOT_NULL} <TEXT,TEXTAREA,PASSWORD,EMAIL,URL,NUMBER,RATING,SELECT,MULTISELECT,RADIO,CHECKBOX,DATE,TIME,DATETIME,DATE_RANGE,PHONE,TEL,FILE,MULTIFILE,COLOR,CPF,CNPJ,SWITCH>"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+        jsonb validation 
+    }
+
+    template_organizational_scopes {
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        text id PK "{NOT_NULL}"
+        boolean is_required "{NOT_NULL}"
+        jsonb metadata 
+        ScopeType scopeType "{NOT_NULL} <MODULE,WORKFLOW,RECORD_TEMPLATE,COMPONENT,PROVIDER_HIERARCHY,ORGANIZATIONAL_UNIT,UNIT_CONTAINER>"
+        text scope_id FK "{NOT_NULL}"
+        text template_id FK "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+    }
+
+    unit_container_items {
+        text container_id FK "{NOT_NULL}"
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        jsonb metadata 
+        text unit_id FK "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+    }
+
+    unit_containers {
+        text client_id "{NOT_NULL}"
+        text container_key "{NOT_NULL}"
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text description 
+        text id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        integer item_count "{NOT_NULL}"
+        jsonb metadata 
+        text name "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+    }
+
+    unit_hierarchies {
+        text child_id FK "{NOT_NULL}"
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        integer depth "{NOT_NULL}"
+        text id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        boolean is_primary "{NOT_NULL}"
+        jsonb metadata 
+        text parent_id FK "{NOT_NULL}"
+        text path_from_root 
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+    }
+
+    user_contexts {
+        ContextType contextType "{NOT_NULL} <ADMIN,AGENCY,CLIENT,PROVIDER>"
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text entity_id "{NOT_NULL}"
+        character_varying id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        boolean is_admin "{NOT_NULL}"
+        jsonb metadata 
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+        text user_id FK "{NOT_NULL}"
+    }
+
+    users {
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        character_varying email "{NOT_NULL}"
+        text id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        character_varying name "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+    }
+
+    workflow_records {
+        AssigneeType assigneeType "<USER,GROUP,CONTEXT,PROVIDER,PROVIDER_GROUP,CLIENT>"
+        text assignee_id 
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        text current_state_id FK "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        timestamp_without_time_zone due_date 
+        character_varying id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        jsonb metadata 
+        text record_id FK "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+        text workflow_id FK "{NOT_NULL}"
+    }
+
+    workflow_state_history {
+        AssigneeType assigneeType "<USER,GROUP,CONTEXT,PROVIDER,PROVIDER_GROUP,CLIENT>"
+        text assignee_id 
+        text changed_by FK "{NOT_NULL}"
+        integer duration 
+        timestamp_without_time_zone entered_at "{NOT_NULL}"
+        timestamp_without_time_zone exited_at 
+        text id PK "{NOT_NULL}"
+        jsonb metadata 
+        text state_id FK "{NOT_NULL}"
+        text workflow_record_id FK "{NOT_NULL}"
+    }
+
+    workflow_states {
+        AssigneeType assigneeType "<USER,GROUP,CONTEXT,PROVIDER,PROVIDER_GROUP,CLIENT>"
+        text assignee_id 
+        boolean auto_transition "{NOT_NULL}"
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        character_varying id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        boolean is_final "{NOT_NULL}"
+        boolean is_initial "{NOT_NULL}"
+        jsonb metadata 
+        text name "{NOT_NULL}"
+        integer order "{NOT_NULL}"
+        jsonb transition_rules 
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+        text workflow_id FK "{NOT_NULL}"
+    }
+
+    workflow_transition_history {
+        text error 
+        text id PK "{NOT_NULL}"
+        jsonb metadata 
+        GenericStatus success "{NOT_NULL} <SUCCESS,FAILURE,PENDING,CANCELLED,BLOCKED,FLAGGED>"
+        text transition_id FK "{NOT_NULL}"
+        timestamp_without_time_zone triggered_at "{NOT_NULL}"
+        text triggered_by FK "{NOT_NULL}"
+        text workflow_record_id FK "{NOT_NULL}"
+    }
+
+    workflow_transitions {
+        jsonb actions 
+        jsonb conditions 
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text from_state_id FK "{NOT_NULL}"
+        character_varying id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        jsonb metadata 
+        text to_state_id FK "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+        text workflow_id FK "{NOT_NULL}"
+    }
+
+    workflow_trigger_executions {
+        text error 
+        timestamp_without_time_zone finished_at 
+        text id PK "{NOT_NULL}"
+        jsonb metadata 
+        jsonb result 
+        timestamp_without_time_zone started_at "{NOT_NULL}"
+        GenericStatus status "{NOT_NULL} <SUCCESS,FAILURE,PENDING,CANCELLED,BLOCKED,FLAGGED>"
+        text trigger_id FK "{NOT_NULL}"
+        text triggered_by FK 
+    }
+
+    workflow_triggers {
+        jsonb actions 
+        jsonb conditions 
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        character_varying id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        jsonb metadata 
+        text name "{NOT_NULL}"
+        text schedule 
+        TriggerType type "{NOT_NULL} <SCHEDULE,EVENT,CONDITION>"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+        text workflow_id FK "{NOT_NULL}"
+    }
+
+    workflows {
+        timestamp_without_time_zone created_at "{NOT_NULL}"
+        text created_by FK "{NOT_NULL}"
+        timestamp_without_time_zone deleted_at 
+        text description 
+        character_varying id PK "{NOT_NULL}"
+        boolean is_active "{NOT_NULL}"
+        jsonb metadata 
+        text module_id FK 
+        text name "{NOT_NULL}"
+        timestamp_without_time_zone updated_at "{NOT_NULL}"
+        text updated_by FK 
+        integer version "{NOT_NULL}"
+    }
+
+    organizational_units }o--|| Entity : "client_id"
+    provider_hierarchies }o--|| Entity : "client_id"
+    provider_hierarchies }o--|| Entity : "parent_provider_id"
+    provider_hierarchies }o--|| Entity : "provider_id"
+    provider_hierarchies }o--|| Entity : "root_provider_id"
+    provider_hierarchy_rules }o--|| Entity : "client_id"
+    Record }o--|| users : "created_by"
+    Record }o--|| users : "updated_by"
+    Record }o--|| organizational_units : "organizational_unit_id"
+    Record }o--|| record_templates : "template_id"
+    Record }o--|| users : "created_by"
+    Record }o--|| users : "updated_by"
+    record_files }o--|| Record : "record_id"
+    record_history }o--|| Record : "record_id"
+    record_organizational_units }o--|| Record : "record_id"
+    record_values }o--|| Record : "record_id"
+    workflow_records }o--|| Record : "record_id"
+    audit_logs }o--|| users : "user_id"
+    audit_logs }o--|| users : "user_id"
+    module_components }o--|| component_library : "library_id"
+    container_node_names }o--|| node_names : "node_name_id"
+    container_node_names }o--|| unit_containers : "container_id"
+    context_permissions }o--|| organizational_units : "scope_id"
+    context_permissions }o--|| permissions : "permission_id"
+    context_permissions }o--|| unit_containers : "scope_id"
+    context_permissions }o--|| user_contexts : "user_context_id"
+    group_members }o--|| users : "user_id"
+    group_members }o--|| groups : "group_id"
+    group_members }o--|| users : "user_id"
+    group_permissions }o--|| groups : "group_id"
+    group_permissions }o--|| organizational_units : "scope_id"
+    group_permissions }o--|| permissions : "permission_id"
+    group_permissions }o--|| unit_containers : "scope_id"
+    module_components }o--|| modules : "module_id"
+    module_dependencies }o--|| modules : "dependency_id"
+    module_dependencies }o--|| modules : "module_id"
+    module_instances }o--|| modules : "module_id"
+    module_instances }o--|| modules : "source_id"
+    module_organizational_scopes }o--|| modules : "module_id"
+    module_organizational_scopes }o--|| node_names : "scope_id"
+    module_organizational_scopes }o--|| organizational_units : "scope_id"
+    module_organizational_scopes }o--|| unit_containers : "scope_id"
+    record_organizational_units }o--|| modules : "module_id"
+    record_templates }o--|| modules : "module_id"
+    record_values }o--|| modules : "module_id"
+    workflows }o--|| modules : "module_id"
+    node_hierarchy_rules }o--|| node_names : "child_node_id"
+    node_hierarchy_rules }o--|| node_names : "parent_node_id"
+    organizational_units }o--|| node_names : "node_name_id"
+    template_organizational_scopes }o--|| node_names : "scope_id"
+    record_organizational_units }o--|| organizational_units : "organizational_unit_id"
+    template_organizational_scopes }o--|| organizational_units : "scope_id"
+    unit_container_items }o--|| organizational_units : "unit_id"
+    unit_hierarchies }o--|| organizational_units : "child_id"
+    unit_hierarchies }o--|| organizational_units : "parent_id"
+    provider_hierarchy_cache }o--|| provider_hierarchies : "hierarchy_id"
+    provider_hierarchy_history }o--|| provider_hierarchies : "hierarchy_id"
+    provider_hierarchy_history }o--|| users : "changed_by"
+    provider_hierarchy_history }o--|| users : "changed_by"
+    record_files }o--|| template_fields : "field_id"
+    record_history }o--|| users : "created_by"
+    record_history }o--|| users : "created_by"
+    record_values }o--|| record_templates : "templateId"
+    template_fields }o--|| record_templates : "template_id"
+    template_organizational_scopes }o--|| record_templates : "template_id"
+    record_values }o--|| template_fields : "field_id"
+    security_logs }o--|| users : "user_id"
+    security_logs }o--|| users : "user_id"
+    system_logs }o--|| users : "user_id"
+    system_logs }o--|| users : "user_id"
+    template_organizational_scopes }o--|| unit_containers : "scope_id"
+    unit_container_items }o--|| unit_containers : "container_id"
+    user_contexts }o--|| users : "user_id"
+    user_contexts }o--|| users : "user_id"
+    workflow_state_history }o--|| users : "changed_by"
+    workflow_state_history }o--|| users : "changed_by"
+    workflow_transition_history }o--|| users : "triggered_by"
+    workflow_transition_history }o--|| users : "triggered_by"
+    workflow_trigger_executions }o--|| users : "triggered_by"
+    workflow_trigger_executions }o--|| users : "triggered_by"
+    workflows }o--|| users : "created_by"
+    workflows }o--|| users : "updated_by"
+    workflows }o--|| users : "created_by"
+    workflows }o--|| users : "updated_by"
+    workflow_records }o--|| workflow_states : "current_state_id"
+    workflow_records }o--|| workflows : "workflow_id"
+    workflow_state_history }o--|| workflow_records : "workflow_record_id"
+    workflow_transition_history }o--|| workflow_records : "workflow_record_id"
+    workflow_state_history }o--|| workflow_states : "state_id"
+    workflow_states }o--|| workflows : "workflow_id"
+    workflow_transitions }o--|| workflow_states : "from_state_id"
+    workflow_transitions }o--|| workflow_states : "to_state_id"
+    workflow_transition_history }o--|| workflow_transitions : "transition_id"
+    workflow_transitions }o--|| workflows : "workflow_id"
+    workflow_trigger_executions }o--|| workflow_triggers : "trigger_id"
+    workflow_triggers }o--|| workflows : "workflow_id"
+```

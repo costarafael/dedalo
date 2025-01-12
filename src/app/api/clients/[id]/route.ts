@@ -1,58 +1,45 @@
-import { NextResponse } from 'next/server'
-import { ClientRepository } from '@/lib/core/repositories'
-import { ClientService } from '@/lib/core/services'
+import { getClientService } from "@/lib/services/client"
+import { NextResponse } from "next/server"
 
-// Instanciando o service com suas dependências
-const clientRepository = new ClientRepository()
-const clientService = new ClientService(clientRepository)
+interface RouteParams {
+  params: {
+    id: string
+  }
+}
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request, { params }: RouteParams) {
   try {
+    const clientService = getClientService()
     const client = await clientService.getById(params.id)
     if (!client) {
-      return NextResponse.json({ error: 'Cliente não encontrado' }, { status: 404 })
+      return new NextResponse(null, { status: 404 })
     }
-
     return NextResponse.json(client)
   } catch (error) {
-    console.error('Erro ao buscar cliente:', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    console.error("Erro ao buscar cliente:", error)
+    return new NextResponse(null, { status: 500 })
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: Request, { params }: RouteParams) {
   try {
-    const body = await request.json()
-    const updatedClient = await clientService.update(params.id, body)
-
-    return NextResponse.json(updatedClient)
+    const data = await request.json()
+    const clientService = getClientService()
+    const client = await clientService.update(params.id, data)
+    return NextResponse.json(client)
   } catch (error) {
-    console.error('Erro ao atualizar cliente:', error)
-    if (error instanceof Error && error.message === 'Cliente não encontrado') {
-      return NextResponse.json({ error: error.message }, { status: 404 })
-    }
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    console.error("Erro ao atualizar cliente:", error)
+    return new NextResponse(null, { status: 500 })
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: Request, { params }: RouteParams) {
   try {
+    const clientService = getClientService()
     await clientService.delete(params.id)
     return new NextResponse(null, { status: 204 })
   } catch (error) {
-    console.error('Erro ao deletar cliente:', error)
-    if (error instanceof Error && error.message === 'Cliente não encontrado') {
-      return NextResponse.json({ error: error.message }, { status: 404 })
-    }
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    console.error("Erro ao remover cliente:", error)
+    return new NextResponse(null, { status: 500 })
   }
 } 

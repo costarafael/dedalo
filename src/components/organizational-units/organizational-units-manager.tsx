@@ -1,29 +1,32 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Plus, ChevronRight, ChevronDown, Trash2, Edit } from "lucide-react"
+import { Plus, ChevronRight, ChevronDown, Trash2, Edit, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 
-import { getNodeNames, createNodeName, type NodeName, updateNodeOrder, updateNodeName, deleteNodeName } from "@/lib/api/node-names"
-import { 
-  getOrganizationalUnits, 
-  createOrganizationalUnit, 
-  getRootUnit, 
-  type OrganizationalUnit,
-  type NewOrganizationalUnit 
-} from "@/lib/api/organizational-units"
-import { getNodeHierarchyRules, createNodeHierarchyRule } from "@/lib/api/node-hierarchies"
-import { getUnitHierarchies, createUnitHierarchy, type UnitHierarchy } from "@/lib/api/unit-hierarchies"
-import { getUnitContainers, createUnitContainer, type UnitContainer } from "@/lib/api/unit-containers"
+import { getNodeService } from '@/lib/services/node'
+import { getUnitService } from '@/lib/services/unit'
+import { getNodeHierarchyService } from '@/lib/services/node-hierarchy'
+import { getUnitHierarchyService } from '@/lib/services/unit-hierarchy'
+import { getUnitContainerService } from '@/lib/services/unit-container'
+import type { NodeName } from '@/lib/core/interfaces'
+import type { OrganizationalUnit, NewOrganizationalUnit } from '@/lib/core/interfaces'
+import type { UnitHierarchy } from '@/types/unit-hierarchy'
+import type { UnitContainer } from '@/types/unit-container'
+import { UnitSelectionMode, NodeType, HierarchyValidationType } from '@/lib/core/interfaces'
 import { UnitContainerManager } from "./unit-container-manager"
 import { OrganizationalUnitsLoading } from "./loading"
 import { NodeList } from "./node-list"
@@ -35,7 +38,7 @@ interface Props {
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
-  unit_selection_mode: z.enum(["single", "multiple"]),
+  unit_selection_mode: z.nativeEnum(UnitSelectionMode),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -52,35 +55,39 @@ export function OrganizationalUnitsManager({ id }: Props) {
   const [activeTab, setActiveTab] = useState("nodes")
   const [rootUnit, setRootUnit] = useState<OrganizationalUnit | null>(null)
   const [hierarchies, setHierarchies] = useState<UnitHierarchy[]>([])
+  const [nodeHierarchyRules, setNodeHierarchyRules] = useState<any[]>([])
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      unit_selection_mode: "single",
+      unit_selection_mode: UnitSelectionMode.SINGLE,
     },
   })
 
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
-      const [nodesData, unitsData, containersData, rootUnitData, hierarchiesData] = await Promise.all([
-        getNodeNames(id),
-        getOrganizationalUnits(id),
-        getUnitContainers(id),
-        getRootUnit(id),
-        getUnitHierarchies(id)
+      const nodeService = getNodeService()
+      const unitService = getUnitService()
+      
+      const [nodesData, unitsData, rootUnitData, hierarchiesData, containersData] = await Promise.all([
+        nodeService.getClientNodes(id),
+        unitService.getClientUnits(id),
+        unitService.getRootUnit(id),
+        getUnitHierarchyService().getClientHierarchies(id),
+        getUnitContainerService().getClientContainersWithItems(id)
       ])
+      
       setNodes(nodesData)
       setUnits(unitsData)
-      setContainers(containersData)
       setRootUnit(rootUnitData)
       setHierarchies(hierarchiesData)
+      setContainers(containersData)
 
       console.log('Loaded data:', { 
         nodes: nodesData, 
         units: unitsData, 
-        containers: containersData, 
         rootUnit: rootUnitData, 
         hierarchies: hierarchiesData 
       })
@@ -102,10 +109,18 @@ export function OrganizationalUnitsManager({ id }: Props) {
 
   const handleNodeSubmit = useCallback(async (data: FormData) => {
     try {
-      await createNodeName({
+      const nodeService = getNodeService()
+      await nodeService.create({
         client_id: id,
         name: data.name,
         unit_selection_mode: data.unit_selection_mode,
+        order: nodes.length,
+        is_root: nodes.length === 0,
+        is_required: false,
+        validationType: HierarchyValidationType.FLEXIBLE,
+        description: '',
+        metadata: {},
+        unit_count: 0
       })
       
       form.reset()
@@ -115,42 +130,47 @@ export function OrganizationalUnitsManager({ id }: Props) {
       console.error("Erro ao criar node:", error)
       toast.error("Erro ao criar node")
     }
-  }, [id, form, loadData])
+  }, [id, form, loadData, nodes.length])
 
   const handleCreateUnit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!newUnitName || !selectedNode) return
+    console.log('Form submitted:', { newUnitName, selectedNode, selectedParentUnits, rootUnit })
+    
+    if (!newUnitName || !selectedNode) {
+      toast.error("Nome da unidade e node são obrigatórios")
+      return
+    }
 
     try {
+      const unitService = getUnitService()
+
+      // Encontra o node selecionado
+      const selectedNodeData = nodes.find(node => node.id === selectedNode)
+      if (!selectedNodeData) {
+        toast.error("Node selecionado não encontrado")
+        return
+      }
+
       const newUnit: NewOrganizationalUnit = {
-        id: crypto.randomUUID(),
         client_id: id,
         name: newUnitName,
         node_name_id: selectedNode,
-        type: "OPTION" as const,
-        updated_at: new Date().toISOString(),
+        type: NodeType.OPTION,
+        depth: 0,
+        order_index: 0,
+        full_path: null,
         is_active: true,
-        deleted_at: null
+        metadata: null
       }
-
-      const createdUnit = await createOrganizationalUnit(newUnit)
 
       // Se não houver unidades pai selecionadas e existir uma unidade root, usar root como pai
       const parentUnits = selectedParentUnits.length > 0 
         ? selectedParentUnits 
         : (rootUnit ? [rootUnit.id] : [])
 
-      await Promise.all(parentUnits.map(async (parentId, index) => {
-        await createUnitHierarchy({
-          id: crypto.randomUUID(),
-          parent_id: parentId,
-          child_id: createdUnit.id,
-          is_primary: index === 0,
-          updated_at: new Date().toISOString(),
-          is_active: true,
-          deleted_at: null
-        })
-      }))
+      console.log('Creating unit with:', { newUnit, parentUnits })
+      const createdUnit = await unitService.createWithHierarchy(newUnit, parentUnits)
+      console.log('Created unit:', createdUnit)
 
       setNewUnitName("")
       setSelectedParentUnits([])
@@ -165,7 +185,7 @@ export function OrganizationalUnitsManager({ id }: Props) {
         toast.error("Erro ao criar unidade")
       }
     }
-  }, [id, newUnitName, selectedNode, selectedParentUnits, rootUnit, loadData])
+  }, [id, newUnitName, selectedNode, selectedParentUnits, rootUnit, loadData, nodes])
 
   const handleCreateContainer = useCallback(async (data: { container: any, unitIds: string[] }) => {
     console.log('handleCreateContainer called with data:', data);
@@ -179,7 +199,8 @@ export function OrganizationalUnitsManager({ id }: Props) {
         container_key: uniqueContainerKey,
       };
 
-      await createUnitContainer(containerData, data.unitIds);
+      const unitContainerService = getUnitContainerService()
+      await unitContainerService.createWithItems(containerData, data.unitIds)
 
       console.log('Container created successfully');
       toast.success("Container criado com sucesso");
@@ -208,20 +229,31 @@ export function OrganizationalUnitsManager({ id }: Props) {
 
   const handleReorderNodes = useCallback(async (newNodes: NodeName[]) => {
     try {
-      await updateNodeOrder(newNodes)
+      const nodeService = getNodeService()
+      await nodeService.updateNodesOrder(newNodes.map(node => ({
+        id: node.id,
+        client_id: id,
+        name: node.name,
+        order: node.order,
+        is_root: node.is_root
+      })))
       setNodes(newNodes)
     } catch (error) {
       console.error("Erro ao reordenar nodes:", error)
       toast.error("Erro ao reordenar nodes")
     }
-  }, [])
+  }, [id])
 
   const handleEditNode = useCallback(async (node: NodeName) => {
     const newName = prompt("Novo nome do node:", node.name)
     if (!newName || newName === node.name) return
 
     try {
-      await updateNodeName(node.id, { name: newName })
+      const nodeService = getNodeService()
+      await nodeService.update(node.id, { 
+        name: newName,
+        validationType: node.validationType
+      })
       toast.success("Node atualizado com sucesso")
       loadData()
     } catch (error) {
@@ -234,7 +266,8 @@ export function OrganizationalUnitsManager({ id }: Props) {
     if (!confirm(`Tem certeza que deseja excluir o node "${node.name}"?`)) return
 
     try {
-      await deleteNodeName(node.id)
+      const nodeService = getNodeService()
+      await nodeService.delete(node.id)
       toast.success("Node excluído com sucesso")
       loadData()
     } catch (error) {
@@ -249,51 +282,57 @@ export function OrganizationalUnitsManager({ id }: Props) {
     hierarchies: Partial<UnitHierarchy>[]
   }) => {
     try {
+      const nodeService = getNodeService()
+      const unitService = getUnitService()
+      const unitHierarchyService = getUnitHierarchyService()
+
       // Criar nodes
-      await Promise.all(data.nodes.map(async (node) => {
-        if (!node.name) return
-        await createNodeName({
+      for (const node of data.nodes) {
+        await nodeService.create({
           client_id: id,
-          name: node.name,
-          description: node.description,
-          validationType: node.validationType,
-          is_required: node.is_required,
+          name: node.name || '',
+          unit_selection_mode: node.unit_selection_mode || UnitSelectionMode.SINGLE,
+          order: node.order || 0,
+          is_root: node.is_root || false,
+          is_required: node.is_required || false,
+          validationType: node.validationType || HierarchyValidationType.FLEXIBLE,
+          description: node.description || '',
+          metadata: node.metadata || {}
         })
-      }))
+      }
 
       // Criar unidades
-      const createdUnits = await Promise.all(data.units.map(async (unit) => {
-        if (!unit.name || !unit.node_name_id) return null
-        return await createOrganizationalUnit({
-          id: crypto.randomUUID(),
+      for (const unit of data.units) {
+        await unitService.create({
           client_id: id,
-          name: unit.name,
-          node_name_id: unit.node_name_id,
-          type: unit.type || "OPTION",
-          is_active: unit.is_active ?? true,
-          updated_at: new Date().toISOString(),
-          deleted_at: null
+          name: unit.name || '',
+          node_name_id: unit.node_name_id || '',
+          type: unit.type || NodeType.OPTION,
+          depth: unit.depth || 0,
+          order_index: unit.order_index || 0,
+          full_path: unit.full_path || null,
+          is_active: unit.is_active || true,
+          metadata: unit.metadata || null
         })
-      }))
+      }
 
       // Criar hierarquias
-      await Promise.all(data.hierarchies.map(async (hierarchy) => {
-        if (!hierarchy.parent_id || !hierarchy.child_id) return
-        await createUnitHierarchy({
-          id: crypto.randomUUID(),
-          parent_id: hierarchy.parent_id,
-          child_id: hierarchy.child_id,
-          is_primary: hierarchy.is_primary ?? false,
-          is_active: hierarchy.is_active ?? true,
-          updated_at: new Date().toISOString(),
-          deleted_at: null
-        })
-      }))
+      for (const hierarchy of data.hierarchies) {
+        if (hierarchy.parent_id && hierarchy.child_id) {
+          await unitHierarchyService.create({
+            parent_id: hierarchy.parent_id,
+            child_id: hierarchy.child_id,
+            is_primary: hierarchy.is_primary || false,
+            is_active: hierarchy.is_active || true
+          })
+        }
+      }
 
+      toast.success("Dados importados com sucesso")
       loadData()
     } catch (error) {
       console.error("Erro ao importar dados:", error)
-      throw error
+      toast.error("Erro ao importar dados")
     }
   }, [id, loadData])
 
@@ -302,58 +341,59 @@ export function OrganizationalUnitsManager({ id }: Props) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-end">
-        <ExcelImportExport
-          clientId={id}
-          clientName={rootUnit?.name || "cliente"}
-          nodes={nodes}
-          units={units}
-          hierarchies={hierarchies}
-          onImport={handleImportExcel}
-        />
-      </div>
-
+    <div className="space-y-8">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full">
-          <TabsTrigger value="nodes" className="flex-1">Nodes</TabsTrigger>
-          <TabsTrigger value="units" className="flex-1">Unidades</TabsTrigger>
-          <TabsTrigger value="containers" className="flex-1">Containers</TabsTrigger>
+        <TabsList>
+          <TabsTrigger value="nodes">Nodes</TabsTrigger>
+          <TabsTrigger value="units">Unidades</TabsTrigger>
+          <TabsTrigger value="containers">Containers</TabsTrigger>
+          <TabsTrigger value="import">Importar/Exportar</TabsTrigger>
         </TabsList>
 
         <TabsContent value="nodes" className="space-y-4">
-          <form onSubmit={form.handleSubmit(handleNodeSubmit)} className="flex gap-4">
-            <div className="flex-1">
-              <Label htmlFor="node-name">Nome do Node</Label>
-              <Input
-                id="node-name"
-                {...form.register("name")}
-                placeholder="Ex: Empreendimento"
-              />
-            </div>
-            <div>
-              <Label htmlFor="unit-selection-mode">Modo de Seleção</Label>
-              <Select 
-                onValueChange={(value: "single" | "multiple") => form.setValue("unit_selection_mode", value)}
-                defaultValue={form.getValues("unit_selection_mode")}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um modo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="single">Única</SelectItem>
-                  <SelectItem value="multiple">Múltipla</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button type="submit" className="mt-8">
-              <Plus className="w-4 h-4 mr-2" />
-              Criar Node
-            </Button>
-          </form>
+          <Card>
+            <CardHeader>
+              <CardTitle>Criar novo node</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={form.handleSubmit(handleNodeSubmit)} className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Nome</Label>
+                  <Input 
+                    id="name"
+                    {...form.register("name")}
+                  />
+                  {form.formState.errors.name && (
+                    <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
+                  )}
+                </div>
 
-          <NodeList
-            nodes={nodes}
+                <div className="grid gap-2">
+                  <Label htmlFor="unit_selection_mode">Modo de seleção</Label>
+                  <Select 
+                    onValueChange={(value) => form.setValue("unit_selection_mode", value as UnitSelectionMode)}
+                    defaultValue={form.getValues("unit_selection_mode")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o modo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={UnitSelectionMode.SINGLE}>Única</SelectItem>
+                      <SelectItem value={UnitSelectionMode.MULTIPLE}>Múltipla</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {form.formState.errors.unit_selection_mode && (
+                    <p className="text-sm text-destructive">{form.formState.errors.unit_selection_mode.message}</p>
+                  )}
+                </div>
+
+                <Button type="submit">Criar node</Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <NodeList 
+            nodes={nodes} 
             onReorder={handleReorderNodes}
             onEdit={handleEditNode}
             onDelete={handleDeleteNode}
@@ -361,162 +401,221 @@ export function OrganizationalUnitsManager({ id }: Props) {
         </TabsContent>
 
         <TabsContent value="units" className="space-y-4">
-          <form onSubmit={handleCreateUnit} className="flex gap-4">
-            <div className="flex-1 space-y-4">
-              <div>
-                <Label htmlFor="unit-name">Nome da Unidade</Label>
-                <Input
-                  id="unit-name"
-                  value={newUnitName}
-                  onChange={(e) => setNewUnitName(e.target.value)}
-                  placeholder="Ex: Unidade A"
-                />
-              </div>
-              <div>
-                <Label htmlFor="node-type">Tipo do Node</Label>
-                <Select value={selectedNode} onValueChange={setSelectedNode}>
-                  <SelectTrigger id="node-type">
-                    <SelectValue placeholder="Selecione um tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {nodes.map((node) => (
-                      <SelectItem key={node.id} value={node.id}>
-                        {node.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="parent-units">Unidades Pai</Label>
-                <div className="grid grid-cols-2 gap-2 mt-2 max-h-[200px] overflow-y-auto border rounded-md p-2">
-                  {rootUnit && (
-                    <div
-                      className={`p-2 border rounded cursor-pointer ${
-                        selectedParentUnits.includes(rootUnit.id)
-                          ? "bg-primary/10 border-primary"
-                          : ""
-                      }`}
-                      onClick={() => {
-                        setSelectedParentUnits(prev => {
-                          if (prev.includes(rootUnit.id)) {
-                            return prev.filter(id => id !== rootUnit.id)
-                          }
-                          return [rootUnit.id, ...prev]
-                        })
-                      }}
-                    >
-                      <div className="font-medium">{rootUnit.name}</div>
-                      <div className="text-xs text-muted-foreground">(Root)</div>
-                    </div>
-                  )}
-                  {units
-                    .filter(unit => unit.id !== rootUnit?.id)
-                    .map((unit) => {
-                    const node = nodes.find(n => n.id === unit.node_name_id)
-                    return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Criar nova unidade</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleCreateUnit} className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="node">Node *</Label>
+                  <Select 
+                    onValueChange={setSelectedNode} 
+                    value={selectedNode}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o node" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {nodes
+                        .filter(node => !node.is_root) // Não permite selecionar o node root
+                        .map((node) => (
+                          <SelectItem key={node.id} value={node.id}>
+                            {node.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Nome da unidade *</Label>
+                  <Input
+                    id="name"
+                    value={newUnitName}
+                    onChange={(e) => setNewUnitName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="parent">Unidades pai (opcional)</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
                       <div
-                        key={unit.id}
-                        className={`p-2 border rounded cursor-pointer ${
-                          selectedParentUnits.includes(unit.id)
-                            ? "bg-primary/10 border-primary"
-                            : ""
-                        }`}
-                        onClick={() => {
-                          setSelectedParentUnits(prev => {
-                            if (prev.includes(unit.id)) {
-                              return prev.filter(id => id !== unit.id)
-                            }
-                            return [...prev, unit.id]
-                          })
+                        role="combobox"
+                        tabIndex={0}
+                        className={cn(
+                          "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                          selectedParentUnits.length > 0 ? "h-full" : "h-10"
+                        )}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === "Space") {
+                            e.preventDefault()
+                            e.currentTarget.click()
+                          }
                         }}
                       >
-                        <div className="font-medium">{unit.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {node?.name}
+                        <div className="flex flex-wrap gap-1">
+                          {selectedParentUnits.length > 0 ? (
+                            selectedParentUnits.map(parentId => {
+                              const unit = units.find(u => u.id === parentId)
+                              return unit && (
+                                <Badge 
+                                  key={parentId}
+                                  variant="secondary"
+                                  className="mr-1 mb-1"
+                                >
+                                  {unit.name}
+                                  <span
+                                    role="button"
+                                    tabIndex={0}
+                                    className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" || e.key === "Space") {
+                                        e.preventDefault()
+                                        setSelectedParentUnits(selectedParentUnits.filter(id => id !== parentId))
+                                      }
+                                    }}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                    }}
+                                    onClick={(e) => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                      setSelectedParentUnits(selectedParentUnits.filter(id => id !== parentId))
+                                    }}
+                                  >
+                                    <X className="h-3 w-3" />
+                                    <span className="sr-only">Remover {unit.name}</span>
+                                  </span>
+                                </Badge>
+                              )
+                            })
+                          ) : (
+                            "Selecione as unidades pai..."
+                          )}
                         </div>
+                        <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
                       </div>
-                    )}
-                  )}
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Procurar unidade..." className="h-9" />
+                        <CommandEmpty>Nenhuma unidade encontrada.</CommandEmpty>
+                        <CommandGroup>
+                          {units
+                            .filter(unit => unit.id !== selectedNode) // Evita selecionar a própria unidade como pai
+                            .map((unit) => (
+                              <CommandItem
+                                key={unit.id}
+                                onSelect={() => {
+                                  if (selectedParentUnits.includes(unit.id)) {
+                                    setSelectedParentUnits(selectedParentUnits.filter(id => id !== unit.id))
+                                  } else {
+                                    setSelectedParentUnits([...selectedParentUnits, unit.id])
+                                  }
+                                }}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedParentUnits.includes(unit.id)}
+                                    onChange={() => {}}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="h-4 w-4"
+                                  />
+                                  {unit.name}
+                                </div>
+                              </CommandItem>
+                            ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
-                {selectedParentUnits.length > 0 && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {selectedParentUnits.length} unidade(s) selecionada(s)
-                  </p>
-                )}
-              </div>
-            </div>
-            <Button 
-              type="submit" 
-              className="mt-8"
-              disabled={!newUnitName || !selectedNode}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Criar Unidade
-            </Button>
-          </form>
 
-          <div className="space-y-2">
-            {units.map((unit) => {
-              const parents = getUnitParents(unit.id)
-              const children = getUnitChildren(unit.id)
-              const node = nodes.find((n) => n.id === unit.node_name_id)
-              const primaryParent = parents.find(p => 
-                hierarchies.find(h => 
-                  h.parent_id === p.id && 
-                  h.child_id === unit.id && 
-                  h.is_primary
-                )
-              )
+                <Button 
+                  type="submit" 
+                  disabled={!selectedNode || !newUnitName}
+                >
+                  Criar unidade
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
 
-              return (
-                <div key={unit.id} className="p-4 border rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium">{unit.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Tipo: {node?.name}
-                      </p>
-                    </div>
-                  </div>
-                  {(parents.length > 0 || children.length > 0) && (
-                    <div className="mt-2 space-y-2">
-                      {parents.length > 0 && (
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Pais:</span>{" "}
-                          {parents.map((p, i) => (
-                            <span key={p.id}>
-                              {p.name}
-                              {p.id === primaryParent?.id && (
-                                <span className="text-xs bg-primary/10 text-primary px-1 rounded ml-1">
-                                  Principal
-                                </span>
+          <Card>
+            <CardHeader>
+              <CardTitle>Unidades organizacionais</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {units.length === 0 ? (
+                <p className="text-muted-foreground">Nenhuma unidade encontrada</p>
+              ) : (
+                <div className="space-y-2">
+                  {units.map((unit) => {
+                    const parents = getUnitParents(unit.id)
+                    const children = getUnitChildren(unit.id)
+                    const isExpanded = true
+
+                    return (
+                      <div key={unit.id} className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          {children.length > 0 && (
+                            <Button variant="ghost" size="icon" className="size-6">
+                              {isExpanded ? (
+                                <ChevronDown className="size-4" />
+                              ) : (
+                                <ChevronRight className="size-4" />
                               )}
-                              {i < parents.length - 1 ? ", " : ""}
+                            </Button>
+                          )}
+                          <span className="font-medium">{unit.name}</span>
+                          {parents.length > 0 && (
+                            <span className="text-sm text-muted-foreground">
+                              (Pai: {parents.map(p => p.name).join(", ")})
                             </span>
-                          ))}
+                          )}
                         </div>
-                      )}
-                      {children.length > 0 && (
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Filhos:</span>{" "}
-                          {children.map((c) => c.name).join(", ")}
-                        </div>
-                      )}
-                    </div>
-                  )}
+
+                        {isExpanded && children.length > 0 && (
+                          <div className="ml-6 space-y-2 border-l pl-4">
+                            {children.map((child) => (
+                              <div key={child.id} className="flex items-center gap-2">
+                                <span>{child.name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
-              )
-            })}
-          </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        <TabsContent value="containers">
+        <TabsContent value="containers" className="space-y-4">
           <UnitContainerManager
             clientId={id}
             nodes={nodes}
             units={units}
             onCreateContainer={handleCreateContainer}
+          />
+        </TabsContent>
+
+        <TabsContent value="import" className="space-y-4">
+          <ExcelImportExport
+            clientId={id}
+            clientName={rootUnit?.name || "cliente"}
+            nodes={nodes}
+            units={units}
+            hierarchies={hierarchies}
+            onImport={handleImportExcel}
           />
         </TabsContent>
       </Tabs>
