@@ -1,2 +1,5 @@
 export * from './client.service'
-export * from './unit.service' 
+export * from './unit.service'
+export * from './module.service'
+export * from './node.service'
+export * from './provider.service' 
