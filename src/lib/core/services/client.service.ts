@@ -1,51 +1,90 @@
-import { Entity, IClientRepository, IClientService } from '../interfaces'
+import { IClientService } from '../interfaces/service.interfaces'
+import { IClientRepository } from '../interfaces/repository.interfaces'
+import type { Client, Entity } from '../interfaces/repository.interfaces'
 
 export class ClientService implements IClientService {
-  constructor(private readonly clientRepository: IClientRepository) {}
+  constructor(private clientRepository: IClientRepository) {}
 
-  async getAll(): Promise<Entity[]> {
-    return this.clientRepository.findAll()
+  validateClient(data: Partial<Client>): boolean {
+    if (!data) return false
+    
+    // Validações básicas
+    if (data.name && data.name.length < 3) return false
+    if (data.document && data.document.length < 11) return false
+    if (data.email && !this.validateEmail(data.email)) return false
+    
+    return true
   }
 
-  async getActiveClients(): Promise<Entity[]> {
-    return this.clientRepository.findActive()
+  validateClientData(data: any): boolean {
+    if (!data) return false
+    
+    // Validar estrutura básica
+    const requiredFields = ['name', 'document', 'email']
+    return requiredFields.every(field => field in data)
   }
 
-  async getById(id: string): Promise<Entity | null> {
-    return this.clientRepository.findById(id)
-  }
-
-  async create(data: Partial<Entity>): Promise<Entity> {
-    // Validações de negócio
-    if (!data.name) {
-      throw new Error('Nome do cliente é obrigatório')
+  transformClientData(data: any): Client {
+    if (!this.validateClientData(data)) {
+      throw new Error('Invalid client data structure')
     }
 
-    return this.clientRepository.create(data)
+    return {
+      id: data.id,
+      name: data.name,
+      document: data.document,
+      email: data.email,
+      phone: data.phone || null,
+      address: data.address || null,
+      metadata: data.metadata || {},
+      created_at: data.created_at || new Date().toISOString(),
+      updated_at: data.updated_at || new Date().toISOString(),
+      deleted_at: data.deleted_at || null,
+      is_active: data.is_active ?? true
+    }
   }
 
-  async update(id: string, data: Partial<Entity>): Promise<Entity> {
-    // Validações de negócio
-    const existingClient = await this.clientRepository.findById(id)
-    if (!existingClient) {
-      throw new Error('Cliente não encontrado')
+  transformToEntity(client: Client): Entity {
+    return {
+      id: client.id,
+      name: client.name,
+      type: 'CLIENT',
+      metadata: {
+        document: client.document,
+        email: client.email,
+        phone: client.phone,
+        address: client.address,
+        ...client.metadata
+      },
+      created_at: client.created_at,
+      updated_at: client.updated_at,
+      deleted_at: client.deleted_at,
+      is_active: client.is_active
     }
-
-    return this.clientRepository.update(id, data)
   }
 
-  async delete(id: string): Promise<void> {
-    // Validações de negócio
-    const existingClient = await this.clientRepository.findById(id)
-    if (!existingClient) {
-      throw new Error('Cliente não encontrado')
+  transformFromEntity(entity: Entity): Client {
+    if (entity.type !== 'CLIENT') {
+      throw new Error('Invalid entity type')
     }
 
-    // TODO: Verificar dependências antes de deletar
-    // - Unidades organizacionais
-    // - Provedores vinculados
-    // - etc
+    return {
+      id: entity.id,
+      name: entity.name,
+      document: entity.metadata?.document || '',
+      email: entity.metadata?.email || '',
+      phone: entity.metadata?.phone || null,
+      address: entity.metadata?.address || null,
+      metadata: entity.metadata || {},
+      created_at: entity.created_at,
+      updated_at: entity.updated_at,
+      deleted_at: entity.deleted_at,
+      is_active: entity.is_active
+    }
+  }
 
-    return this.clientRepository.delete(id)
+  private validateEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
   }
 } 

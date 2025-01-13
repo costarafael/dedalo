@@ -1,83 +1,79 @@
-import { IUnitRepository, IUnitService, OrganizationalUnit, NewOrganizationalUnit } from '../interfaces'
+import { IUnitService } from '../interfaces/service.interfaces'
+import { IUnitRepository, INodeRepository } from '../interfaces/repository.interfaces'
+import type { OrganizationalUnit } from '../interfaces/repository.interfaces'
 
 export class UnitService implements IUnitService {
-  constructor(private readonly unitRepository: IUnitRepository) {}
+  constructor(
+    private unitRepository: IUnitRepository,
+    private nodeRepository: INodeRepository
+  ) {}
 
-  async getAll(): Promise<OrganizationalUnit[]> {
-    return this.unitRepository.findAll()
+  validateUnit(data: Partial<OrganizationalUnit>): boolean {
+    if (!data) return false
+    
+    // Validações básicas
+    if (data.name && data.name.length < 3) return false
+    if (!data.client_id) return false
+    if (!data.node_name_id) return false
+    
+    return true
   }
 
-  async getClientUnits(clientId: string): Promise<OrganizationalUnit[]> {
-    return this.unitRepository.findByClientId(clientId)
+  validateUnitData(data: any): boolean {
+    if (!data) return false
+    
+    // Validar estrutura básica
+    const requiredFields = ['name', 'client_id', 'node_name_id']
+    return requiredFields.every(field => field in data)
   }
 
-  async getRootUnit(clientId: string): Promise<OrganizationalUnit | null> {
-    return this.unitRepository.findRootUnit(clientId)
-  }
-
-  async getById(id: string): Promise<OrganizationalUnit | null> {
-    return this.unitRepository.findById(id)
-  }
-
-  async validateUnitCreation(unit: NewOrganizationalUnit): Promise<void> {
-    // Validar se já existe uma unidade ROOT para o cliente
-    if (unit.type === 'ROOT') {
-      const existingRoot = await this.unitRepository.findRootUnit(unit.client_id)
-      if (existingRoot) {
-        throw new Error('Já existe uma unidade root para este cliente')
-      }
+  transformUnitData(data: any): OrganizationalUnit {
+    if (!this.validateUnitData(data)) {
+      throw new Error('Invalid unit data structure')
     }
 
-    // Validar nome da unidade
-    if (!unit.name || unit.name.trim().length === 0) {
-      throw new Error('Nome da unidade é obrigatório')
-    }
-
-    // Validar tipo de nó
-    if (!unit.node_name_id) {
-      throw new Error('Tipo de nó é obrigatório')
+    return {
+      id: data.id,
+      name: data.name,
+      client_id: data.client_id,
+      node_name_id: data.node_name_id,
+      metadata: data.metadata || {},
+      created_at: data.created_at || new Date().toISOString(),
+      updated_at: data.updated_at || new Date().toISOString(),
+      deleted_at: data.deleted_at || null,
+      is_active: data.is_active ?? true
     }
   }
 
-  async create(unit: NewOrganizationalUnit): Promise<OrganizationalUnit> {
-    // Validações de negócio
-    await this.validateUnitCreation(unit)
-
-    return this.unitRepository.create(unit)
+  async validateNodeAssignment(nodeId: string, clientId: string): Promise<boolean> {
+    // Verificar se o nó existe e pertence ao cliente
+    const node = await this.nodeRepository.findById(nodeId)
+    if (!node) return false
+    if (node.client_id !== clientId) return false
+    
+    return true
   }
 
-  async update(id: string, unit: Partial<OrganizationalUnit>): Promise<OrganizationalUnit> {
-    // Validações de negócio
-    const existingUnit = await this.unitRepository.findById(id)
-    if (!existingUnit) {
-      throw new Error('Unidade não encontrada')
-    }
+  async validateHierarchy(parentId: string, childId: string): Promise<boolean> {
+    // Verificar se as unidades existem
+    const [parent, child] = await Promise.all([
+      this.unitRepository.findById(parentId),
+      this.unitRepository.findById(childId)
+    ])
 
-    // Não permitir alterar tipo ROOT
-    if (existingUnit.type === 'ROOT' && unit.type && unit.type !== 'ROOT') {
-      throw new Error('Não é possível alterar o tipo de uma unidade ROOT')
-    }
-
-    return this.unitRepository.update(id, unit)
-  }
-
-  async delete(id: string): Promise<void> {
-    // Validações de negócio
-    const existingUnit = await this.unitRepository.findById(id)
-    if (!existingUnit) {
-      throw new Error('Unidade não encontrada')
-    }
-
-    // Não permitir deletar ROOT
-    if (existingUnit.type === 'ROOT') {
-      throw new Error('Não é possível deletar uma unidade ROOT')
-    }
-
-    // TODO: Verificar dependências antes de deletar
-    // - Unidades filhas
-    // - Registros vinculados
+    if (!parent || !child) return false
+    
+    // Verificar se são do mesmo cliente
+    if (parent.client_id !== child.client_id) return false
+    
+    // Verificar se não é a mesma unidade
+    if (parentId === childId) return false
+    
+    // TODO: Adicionar validações específicas de hierarquia
+    // - Verificar ciclos
+    // - Verificar regras de nós
     // - etc
-
-    return this.unitRepository.delete(id)
+    
+    return true
   }
 } 

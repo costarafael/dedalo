@@ -96,7 +96,31 @@ export const NODE_TYPES = {
 } as const
 
 // Interfaces base
-export interface Entity extends EntityRow {}
+export interface Entity {
+  id: string
+  name: string
+  type: 'ADMIN' | 'AGENCY' | 'CLIENT' | 'PROVIDER' | null
+  metadata?: Record<string, any>
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+  is_active: boolean
+}
+
+export interface Client {
+  id: string
+  name: string
+  document: string
+  email: string
+  phone: string | null
+  address: string | null
+  metadata?: Record<string, any>
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+  is_active: boolean
+}
+
 export interface OrganizationalUnit extends OrganizationalUnitRow {}
 export interface NodeName extends NodeNameRow {}
 export interface NodeHierarchyRule extends NodeHierarchyRuleRow {}

@@ -1,49 +1,105 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../config/axios.config'
-import type { ApiResponse, PaginatedResponse } from '../types/api.types'
-import type { OrganizationalUnit, NewOrganizationalUnit } from '@/lib/core/interfaces'
+import type { ApiResponse } from '../types/api.types'
+import type { OrganizationalUnit } from '@/lib/core/interfaces/repository.interfaces'
+import { UnitService } from '@/lib/core/services/unit.service'
+import { UnitRepository } from '@/lib/core/repositories/unit.repository'
+import { NodeRepository } from '@/lib/core/repositories/node.repository'
+
+// Instância do serviço
+const unitService = new UnitService(new UnitRepository(), new NodeRepository())
 
 // Keys para cache do React Query
 export const unitKeys = {
   all: ['units'] as const,
-  lists: () => [...unitKeys.all, 'list'] as const,
-  list: (filters: any) => [...unitKeys.lists(), { filters }] as const,
-  details: () => [...unitKeys.all, 'detail'] as const,
-  detail: (id: string) => [...unitKeys.details(), id] as const,
-  byClient: (clientId: string) => [...unitKeys.all, 'client', clientId] as const,
-  root: (clientId: string) => [...unitKeys.all, 'root', clientId] as const,
+  lists: () => [...unitKeys.all, 'list'],
+  list: (filters: any) => [...unitKeys.lists(), { filters }],
+  details: () => [...unitKeys.all, 'detail'],
+  detail: (id: string) => [...unitKeys.details(), id],
+  byClient: (clientId: string) => [...unitKeys.all, 'client', clientId],
+  root: (clientId: string) => [...unitKeys.all, 'root', clientId],
 }
 
 // Funções de API
 export const unitApi = {
   getAll: async (): Promise<ApiResponse<OrganizationalUnit[]>> => {
     const { data } = await api.get('/api/units')
-    return data
+    return {
+      ...data,
+      data: data.data.map((item: any) => unitService.transformUnitData(item))
+    }
   },
 
   getById: async (id: string): Promise<ApiResponse<OrganizationalUnit>> => {
     const { data } = await api.get(`/api/units/${id}`)
-    return data
+    return {
+      ...data,
+      data: unitService.transformUnitData(data.data)
+    }
   },
 
   getByClient: async (clientId: string): Promise<ApiResponse<OrganizationalUnit[]>> => {
     const { data } = await api.get(`/api/units/client/${clientId}`)
-    return data
+    return {
+      ...data,
+      data: data.data.map((item: any) => unitService.transformUnitData(item))
+    }
   },
 
   getRootUnit: async (clientId: string): Promise<ApiResponse<OrganizationalUnit>> => {
     const { data } = await api.get(`/api/units/root/${clientId}`)
-    return data
+    return {
+      ...data,
+      data: unitService.transformUnitData(data.data)
+    }
   },
 
-  create: async (unit: NewOrganizationalUnit): Promise<ApiResponse<OrganizationalUnit>> => {
+  create: async (unit: Partial<OrganizationalUnit>): Promise<ApiResponse<OrganizationalUnit>> => {
+    if (!unitService.validateUnit(unit)) {
+      throw new Error('Invalid unit data')
+    }
+
+    // Validar associação do nó
+    if (unit.node_name_id && unit.client_id) {
+      const isValidNode = await unitService.validateNodeAssignment(
+        unit.node_name_id,
+        unit.client_id
+      )
+      if (!isValidNode) {
+        throw new Error('Invalid node assignment')
+      }
+    } else {
+      throw new Error('Node and client are required')
+    }
+
     const { data } = await api.post('/api/units', unit)
-    return data
+    return {
+      ...data,
+      data: unitService.transformUnitData(data.data)
+    }
   },
 
   update: async (id: string, unit: Partial<OrganizationalUnit>): Promise<ApiResponse<OrganizationalUnit>> => {
+    if (!unitService.validateUnit(unit)) {
+      throw new Error('Invalid unit data')
+    }
+
+    // Validar associação do nó
+    if (unit.node_name_id && unit.client_id) {
+      const isValidNode = await unitService.validateNodeAssignment(
+        unit.node_name_id,
+        unit.client_id
+      )
+      if (!isValidNode) {
+        throw new Error('Invalid node assignment')
+      }
+    }
+
     const { data } = await api.put(`/api/units/${id}`, unit)
-    return data
+    return {
+      ...data,
+      data: unitService.transformUnitData(data.data)
+    }
   },
 
   delete: async (id: string): Promise<void> => {
@@ -96,8 +152,10 @@ export const useCreateUnit = () => {
   return useMutation({
     mutationFn: unitApi.create,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(unitKeys.lists())
-      queryClient.invalidateQueries(unitKeys.byClient(variables.client_id))
+      queryClient.invalidateQueries({ queryKey: unitKeys.lists() })
+      queryClient.invalidateQueries({ 
+        queryKey: unitKeys.byClient(variables.client_id)
+      })
     }
   })
 }
@@ -109,8 +167,8 @@ export const useUpdateUnit = () => {
     mutationFn: ({ id, data }: { id: string; data: Partial<OrganizationalUnit> }) => 
       unitApi.update(id, data),
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries(unitKeys.detail(id))
-      queryClient.invalidateQueries(unitKeys.lists())
+      queryClient.invalidateQueries({ queryKey: unitKeys.detail(id) })
+      queryClient.invalidateQueries({ queryKey: unitKeys.lists() })
     }
   })
 }
@@ -121,7 +179,7 @@ export const useDeleteUnit = () => {
   return useMutation({
     mutationFn: unitApi.delete,
     onSuccess: () => {
-      queryClient.invalidateQueries(unitKeys.lists())
+      queryClient.invalidateQueries({ queryKey: unitKeys.lists() })
     }
   })
 } 

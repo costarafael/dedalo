@@ -1,34 +1,25 @@
-import { Entity, OrganizationalUnit, NewOrganizationalUnit } from './repository.interfaces'
+import { Entity, Client, OrganizationalUnit, NodeName } from './repository.interfaces'
 
-// Interface base para services
-export interface IBaseService<T, CreateDTO = any, UpdateDTO = Partial<T>> {
-  getAll(): Promise<T[]>
-  getById(id: string): Promise<T | null>
-  create(data: CreateDTO): Promise<T>
-  update(id: string, data: UpdateDTO): Promise<T>
-  delete(id: string): Promise<void>
+export interface IClientService {
+  validateClient(data: Partial<Client>): boolean
+  validateClientData(data: any): boolean
+  transformClientData(data: any): Client
+  transformToEntity(client: Client): Entity
+  transformFromEntity(entity: Entity): Client
 }
 
-// Interface específica para Client Service
-export interface IClientService extends IBaseService<Entity> {
-  getActiveClients(): Promise<Entity[]>
+export interface IUnitService {
+  validateUnit(data: Partial<OrganizationalUnit>): boolean
+  validateUnitData(data: any): boolean
+  transformUnitData(data: any): OrganizationalUnit
+  validateNodeAssignment(nodeId: string, clientId: string): Promise<boolean>
+  validateHierarchy(parentId: string, childId: string): Promise<boolean>
 }
 
-// Interface específica para Organizational Unit Service
-export interface IUnitService extends IBaseService<OrganizationalUnit, NewOrganizationalUnit> {
-  getClientUnits(clientId: string): Promise<OrganizationalUnit[]>
-  getRootUnit(clientId: string): Promise<OrganizationalUnit | null>
-  validateUnitCreation(unit: NewOrganizationalUnit): Promise<void>
-}
-
-// Interface específica para Node Service
-export interface INodeService extends IBaseService<OrganizationalUnit> {
-  getNodesByType(type: string): Promise<OrganizationalUnit[]>
-  validateNodeHierarchy(parentId: string, childId: string): Promise<void>
-}
-
-// Interface específica para Container Service
-export interface IContainerService extends IBaseService<OrganizationalUnit> {
-  getClientContainers(clientId: string): Promise<OrganizationalUnit[]>
-  validateContainerAssignment(containerId: string, unitId: string): Promise<void>
+export interface INodeService {
+  validateNode(data: Partial<NodeName>): boolean
+  validateNodeData(data: any): boolean
+  transformNodeData(data: any): NodeName
+  validateNodeName(name: string, clientId: string, excludeId?: string): Promise<boolean>
+  validateHierarchy(parentId: string, childId: string): Promise<boolean>
 } 

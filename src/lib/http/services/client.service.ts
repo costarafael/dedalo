@@ -1,57 +1,78 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../config/axios.config'
-import type { ApiResponse, PaginatedResponse } from '../types/api.types'
-import type { Entity } from '@/lib/core/interfaces'
+import type { ApiResponse } from '../types/api.types'
+import type { Client, Entity } from '@/lib/core/interfaces/repository.interfaces'
+import { ClientService } from '@/lib/core/services/client.service'
+import { ClientRepository } from '@/lib/core/repositories/client.repository'
+
+// Instância do serviço
+const clientService = new ClientService(new ClientRepository())
 
 // Keys para cache do React Query
 export const clientKeys = {
   all: ['clients'] as const,
-  lists: () => [...clientKeys.all, 'list'] as const,
-  list: (filters: any) => [...clientKeys.lists(), { filters }] as const,
-  details: () => [...clientKeys.all, 'detail'] as const,
-  detail: (id: string) => [...clientKeys.details(), id] as const,
+  lists: () => [...clientKeys.all, 'list'],
+  list: (filters: any) => [...clientKeys.lists(), { filters }],
+  details: () => [...clientKeys.all, 'detail'],
+  detail: (id: string) => [...clientKeys.details(), id],
 }
 
 // Funções de API
 export const clientApi = {
-  getAll: async (): Promise<ApiResponse<Entity[]>> => {
-    const { data } = await api.get('/clients')
-    return data
+  getAll: async (): Promise<ApiResponse<Client[]>> => {
+    const { data } = await api.get('/api/clients')
+    return {
+      ...data,
+      data: data.data.map(item => clientService.transformFromEntity(item))
+    }
   },
 
-  getById: async (id: string): Promise<ApiResponse<Entity>> => {
-    const { data } = await api.get(`/clients/${id}`)
-    return data
+  getById: async (id: string): Promise<ApiResponse<Client>> => {
+    const { data } = await api.get(`/api/clients/${id}`)
+    return {
+      ...data,
+      data: clientService.transformFromEntity(data.data)
+    }
   },
 
-  create: async (client: Partial<Entity>): Promise<ApiResponse<Entity>> => {
-    const { data } = await api.post('/clients', client)
-    return data
+  create: async (client: Partial<Client>): Promise<ApiResponse<Client>> => {
+    if (!clientService.validateClient(client)) {
+      throw new Error('Invalid client data')
+    }
+
+    const entity = clientService.transformToEntity(client as Client)
+    const { data } = await api.post('/api/clients', entity)
+    
+    return {
+      ...data,
+      data: clientService.transformFromEntity(data.data)
+    }
   },
 
-  update: async (id: string, client: Partial<Entity>): Promise<ApiResponse<Entity>> => {
-    const { data } = await api.put(`/clients/${id}`, client)
-    return data
+  update: async (id: string, client: Partial<Client>): Promise<ApiResponse<Client>> => {
+    if (!clientService.validateClient(client)) {
+      throw new Error('Invalid client data')
+    }
+
+    const entity = clientService.transformToEntity(client as Client)
+    const { data } = await api.put(`/api/clients/${id}`, entity)
+    
+    return {
+      ...data,
+      data: clientService.transformFromEntity(data.data)
+    }
   },
 
   delete: async (id: string): Promise<void> => {
-    await api.delete(`/clients/${id}`)
-  },
-
-  getPaginated: async (page: number = 1, limit: number = 10): Promise<PaginatedResponse<Entity>> => {
-    const { data } = await api.get('/clients', {
-      params: { page, limit }
-    })
-    return data
+    await api.delete(`/api/clients/${id}`)
   }
 }
 
 // Hooks do React Query
-export const useClients = (page?: number, limit?: number) => {
+export const useClients = () => {
   return useQuery({
-    queryKey: clientKeys.list({ page, limit }),
-    queryFn: () => clientApi.getPaginated(page, limit),
-    keepPreviousData: true
+    queryKey: clientKeys.lists(),
+    queryFn: () => clientApi.getAll()
   })
 }
 
@@ -69,7 +90,7 @@ export const useCreateClient = () => {
   return useMutation({
     mutationFn: clientApi.create,
     onSuccess: () => {
-      queryClient.invalidateQueries(clientKeys.lists())
+      queryClient.invalidateQueries({ queryKey: clientKeys.lists() })
     }
   })
 }
@@ -78,11 +99,11 @@ export const useUpdateClient = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Entity> }) => 
+    mutationFn: ({ id, data }: { id: string; data: Partial<Client> }) => 
       clientApi.update(id, data),
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries(clientKeys.detail(id))
-      queryClient.invalidateQueries(clientKeys.lists())
+      queryClient.invalidateQueries({ queryKey: clientKeys.detail(id) })
+      queryClient.invalidateQueries({ queryKey: clientKeys.lists() })
     }
   })
 }
@@ -93,7 +114,7 @@ export const useDeleteClient = () => {
   return useMutation({
     mutationFn: clientApi.delete,
     onSuccess: () => {
-      queryClient.invalidateQueries(clientKeys.lists())
+      queryClient.invalidateQueries({ queryKey: clientKeys.lists() })
     }
   })
 } 
