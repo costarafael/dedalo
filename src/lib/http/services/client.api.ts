@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../config/axios.config'
 import type { ApiResponse } from '../types/api.types'
-import type { Client, Entity } from '@/lib/core/interfaces/repository.interfaces'
+import type { Client } from '@/lib/core/interfaces/repository.interfaces'
 import { ClientService } from '@/lib/core/services/client.service'
 import { ClientRepository } from '@/lib/core/repositories/client.repository'
 
