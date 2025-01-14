@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<diagram version="1" name="dedalo-entire-public">
+	<entities>
+		<data-source id="postgres-jdbc-194432fb6f6-66e295531b4b6732">
+			<entity id="1" name="Entity" fq-name="public.&quot;Entity&quot;">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="2" name="Record" fq-name="public.&quot;Record&quot;">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="3" name="audit_logs" fq-name="public.audit_logs">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="4" name="component_library" fq-name="public.component_library">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="5" name="container_node_names" fq-name="public.container_node_names">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="6" name="context_permissions" fq-name="public.context_permissions">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="7" name="group_members" fq-name="public.group_members">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="8" name="group_permissions" fq-name="public.group_permissions">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="9" name="groups" fq-name="public.&quot;groups&quot;">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="10" name="integration_logs" fq-name="public.integration_logs">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="11" name="module_components" fq-name="public.module_components">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="12" name="module_dependencies" fq-name="public.module_dependencies">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="13" name="module_instances" fq-name="public.module_instances">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="14" name="module_organizational_scopes" fq-name="public.module_organizational_scopes">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="15" name="modules" fq-name="public.modules">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="16" name="node_hierarchy_rules" fq-name="public.node_hierarchy_rules">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="17" name="node_names" fq-name="public.node_names">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="18" name="organizational_units" fq-name="public.organizational_units">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="19" name="orioledb_index" fq-name="public.orioledb_index">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="20" name="orioledb_index_descr" fq-name="public.orioledb_index_descr">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="21" name="orioledb_table" fq-name="public.orioledb_table">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="22" name="orioledb_table_descr" fq-name="public.orioledb_table_descr">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="23" name="performance_logs" fq-name="public.performance_logs">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="24" name="permissions" fq-name="public.permissions">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="25" name="provider_hierarchies" fq-name="public.provider_hierarchies">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="26" name="provider_hierarchy_cache" fq-name="public.provider_hierarchy_cache">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="27" name="provider_hierarchy_history" fq-name="public.provider_hierarchy_history">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="28" name="provider_hierarchy_rules" fq-name="public.provider_hierarchy_rules">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="29" name="record_files" fq-name="public.record_files">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="30" name="record_history" fq-name="public.record_history">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="31" name="record_organizational_units" fq-name="public.record_organizational_units">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="32" name="record_templates" fq-name="public.record_templates">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="33" name="record_values" fq-name="public.record_values">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="34" name="security_logs" fq-name="public.security_logs">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="35" name="system_logs" fq-name="public.system_logs">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="36" name="template_fields" fq-name="public.template_fields">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="37" name="template_organizational_scopes" fq-name="public.template_organizational_scopes">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="38" name="unit_container_items" fq-name="public.unit_container_items">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="39" name="unit_containers" fq-name="public.unit_containers">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="40" name="unit_hierarchies" fq-name="public.unit_hierarchies">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="41" name="user_contexts" fq-name="public.user_contexts">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="42" name="users" fq-name="public.users">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="43" name="workflow_records" fq-name="public.workflow_records">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="44" name="workflow_state_history" fq-name="public.workflow_state_history">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="45" name="workflow_states" fq-name="public.workflow_states">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="46" name="workflow_transition_history" fq-name="public.workflow_transition_history">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="47" name="workflow_transitions" fq-name="public.workflow_transitions">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="48" name="workflow_trigger_executions" fq-name="public.workflow_trigger_executions">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="49" name="workflow_triggers" fq-name="public.workflow_triggers">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+			<entity id="50" name="workflows" fq-name="public.workflows">
+				<path name="public"/>
+				<path name="postgres"/>
+			</entity>
+		</data-source>
+	</entities>
+	<relations>
+		<relation name="organizational_units_client_id_fkey" fq-name="public.organizational_units.organizational_units_client_id_fkey" type="fk" pk-ref="1" fk-ref="18"/>
+		<relation name="provider_hierarchies_client_id_fkey" fq-name="public.provider_hierarchies.provider_hierarchies_client_id_fkey" type="fk" pk-ref="1" fk-ref="25"/>
+		<relation name="provider_hierarchies_parent_provider_id_fkey" fq-name="public.provider_hierarchies.provider_hierarchies_parent_provider_id_fkey" type="fk" pk-ref="1" fk-ref="25"/>
+		<relation name="provider_hierarchies_provider_id_fkey" fq-name="public.provider_hierarchies.provider_hierarchies_provider_id_fkey" type="fk" pk-ref="1" fk-ref="25"/>
+		<relation name="provider_hierarchies_root_provider_id_fkey" fq-name="public.provider_hierarchies.provider_hierarchies_root_provider_id_fkey" type="fk" pk-ref="1" fk-ref="25"/>
+		<relation name="provider_hierarchy_rules_client_id_fkey" fq-name="public.provider_hierarchy_rules.provider_hierarchy_rules_client_id_fkey" type="fk" pk-ref="1" fk-ref="28"/>
+		<relation name="record_files_record_id_fkey" fq-name="public.record_files.record_files_record_id_fkey" type="fk" pk-ref="2" fk-ref="29"/>
+		<relation name="record_history_record_id_fkey" fq-name="public.record_history.record_history_record_id_fkey" type="fk" pk-ref="2" fk-ref="30"/>
+		<relation name="record_organizational_units_record_id_fkey" fq-name="public.record_organizational_units.record_organizational_units_record_id_fkey" type="fk" pk-ref="2" fk-ref="31"/>
+		<relation name="record_values_record_id_fkey" fq-name="public.record_values.record_values_record_id_fkey" type="fk" pk-ref="2" fk-ref="33"/>
+		<relation name="workflow_records_record_id_fkey" fq-name="public.workflow_records.workflow_records_record_id_fkey" type="fk" pk-ref="2" fk-ref="43"/>
+		<relation name="module_components_library_id_fkey" fq-name="public.module_components.module_components_library_id_fkey" type="fk" pk-ref="4" fk-ref="11"/>
+		<relation name="group_members_group_id_fkey" fq-name="public.group_members.group_members_group_id_fkey" type="fk" pk-ref="9" fk-ref="7"/>
+		<relation name="group_permissions_group_id_fkey" fq-name="public.group_permissions.group_permissions_group_id_fkey" type="fk" pk-ref="9" fk-ref="8"/>
+		<relation name="module_components_module_id_fkey" fq-name="public.module_components.module_components_module_id_fkey" type="fk" pk-ref="15" fk-ref="11"/>
+		<relation name="module_dependencies_dependency_id_fkey" fq-name="public.module_dependencies.module_dependencies_dependency_id_fkey" type="fk" pk-ref="15" fk-ref="12"/>
+		<relation name="module_dependencies_module_id_fkey" fq-name="public.module_dependencies.module_dependencies_module_id_fkey" type="fk" pk-ref="15" fk-ref="12"/>
+		<relation name="module_instances_module_id_fkey" fq-name="public.module_instances.module_instances_module_id_fkey" type="fk" pk-ref="15" fk-ref="13"/>
+		<relation name="module_instances_source_id_fkey" fq-name="public.module_instances.module_instances_source_id_fkey" type="fk" pk-ref="15" fk-ref="13"/>
+		<relation name="module_organizational_scopes_module_id_fkey" fq-name="public.module_organizational_scopes.module_organizational_scopes_module_id_fkey" type="fk" pk-ref="15" fk-ref="14"/>
+		<relation name="record_organizational_units_module_id_fkey" fq-name="public.record_organizational_units.record_organizational_units_module_id_fkey" type="fk" pk-ref="15" fk-ref="31"/>
+		<relation name="record_templates_module_id_fkey" fq-name="public.record_templates.record_templates_module_id_fkey" type="fk" pk-ref="15" fk-ref="32"/>
+		<relation name="record_values_module_id_fkey" fq-name="public.record_values.record_values_module_id_fkey" type="fk" pk-ref="15" fk-ref="33"/>
+		<relation name="workflows_module_id_fkey" fq-name="public.workflows.workflows_module_id_fkey" type="fk" pk-ref="15" fk-ref="50"/>
+		<relation name="container_node_names_node_name_id_fkey" fq-name="public.container_node_names.container_node_names_node_name_id_fkey" type="fk" pk-ref="17" fk-ref="5"/>
+		<relation name="module_scopes_node_name_fkey" fq-name="public.module_organizational_scopes.module_scopes_node_name_fkey" type="fk" pk-ref="17" fk-ref="14"/>
+		<relation name="node_hierarchy_rules_child_node_id_fkey" fq-name="public.node_hierarchy_rules.node_hierarchy_rules_child_node_id_fkey" type="fk" pk-ref="17" fk-ref="16"/>
+		<relation name="node_hierarchy_rules_parent_node_id_fkey" fq-name="public.node_hierarchy_rules.node_hierarchy_rules_parent_node_id_fkey" type="fk" pk-ref="17" fk-ref="16"/>
+		<relation name="organizational_units_node_name_id_fkey" fq-name="public.organizational_units.organizational_units_node_name_id_fkey" type="fk" pk-ref="17" fk-ref="18"/>
+		<relation name="template_scopes_node_name_fkey" fq-name="public.template_organizational_scopes.template_scopes_node_name_fkey" type="fk" pk-ref="17" fk-ref="37"/>
+		<relation name="Record_organizational_unit_id_fkey" fq-name="public.&quot;Record&quot;.&quot;Record_organizational_unit_id_fkey&quot;" type="fk" pk-ref="18" fk-ref="2"/>
+		<relation name="context_permissions_org_unit_fkey" fq-name="public.context_permissions.context_permissions_org_unit_fkey" type="fk" pk-ref="18" fk-ref="6"/>
+		<relation name="group_permissions_org_unit_fkey" fq-name="public.group_permissions.group_permissions_org_unit_fkey" type="fk" pk-ref="18" fk-ref="8"/>
+		<relation name="module_scopes_org_unit_fkey" fq-name="public.module_organizational_scopes.module_scopes_org_unit_fkey" type="fk" pk-ref="18" fk-ref="14"/>
+		<relation name="record_organizational_units_organizational_unit_id_fkey" fq-name="public.record_organizational_units.record_organizational_units_organizational_unit_id_fkey" type="fk" pk-ref="18" fk-ref="31"/>
+		<relation name="template_scopes_org_unit_fkey" fq-name="public.template_organizational_scopes.template_scopes_org_unit_fkey" type="fk" pk-ref="18" fk-ref="37"/>
+		<relation name="unit_container_items_unit_id_fkey" fq-name="public.unit_container_items.unit_container_items_unit_id_fkey" type="fk" pk-ref="18" fk-ref="38"/>
+		<relation name="unit_hierarchies_child_id_fkey" fq-name="public.unit_hierarchies.unit_hierarchies_child_id_fkey" type="fk" pk-ref="18" fk-ref="40"/>
+		<relation name="unit_hierarchies_parent_id_fkey" fq-name="public.unit_hierarchies.unit_hierarchies_parent_id_fkey" type="fk" pk-ref="18" fk-ref="40"/>
+		<relation name="context_permissions_permission_id_fkey" fq-name="public.context_permissions.context_permissions_permission_id_fkey" type="fk" pk-ref="24" fk-ref="6"/>
+		<relation name="group_permissions_permission_id_fkey" fq-name="public.group_permissions.group_permissions_permission_id_fkey" type="fk" pk-ref="24" fk-ref="8"/>
+		<relation name="provider_hierarchy_cache_hierarchy_id_fkey" fq-name="public.provider_hierarchy_cache.provider_hierarchy_cache_hierarchy_id_fkey" type="fk" pk-ref="25" fk-ref="26"/>
+		<relation name="provider_hierarchy_history_hierarchy_id_fkey" fq-name="public.provider_hierarchy_history.provider_hierarchy_history_hierarchy_id_fkey" type="fk" pk-ref="25" fk-ref="27"/>
+		<relation name="Record_template_id_fkey" fq-name="public.&quot;Record&quot;.&quot;Record_template_id_fkey&quot;" type="fk" pk-ref="32" fk-ref="2"/>
+		<relation name="record_values_templateId_fkey" fq-name="public.record_values.&quot;record_values_templateId_fkey&quot;" type="fk" pk-ref="32" fk-ref="33"/>
+		<relation name="template_fields_template_id_fkey" fq-name="public.template_fields.template_fields_template_id_fkey" type="fk" pk-ref="32" fk-ref="36"/>
+		<relation name="template_organizational_scopes_template_id_fkey" fq-name="public.template_organizational_scopes.template_organizational_scopes_template_id_fkey" type="fk" pk-ref="32" fk-ref="37"/>
+		<relation name="record_files_field_id_fkey" fq-name="public.record_files.record_files_field_id_fkey" type="fk" pk-ref="36" fk-ref="29"/>
+		<relation name="record_values_field_id_fkey" fq-name="public.record_values.record_values_field_id_fkey" type="fk" pk-ref="36" fk-ref="33"/>
+		<relation name="container_node_names_container_id_fkey" fq-name="public.container_node_names.container_node_names_container_id_fkey" type="fk" pk-ref="39" fk-ref="5"/>
+		<relation name="context_permissions_unit_container_fkey" fq-name="public.context_permissions.context_permissions_unit_container_fkey" type="fk" pk-ref="39" fk-ref="6"/>
+		<relation name="group_permissions_unit_container_fkey" fq-name="public.group_permissions.group_permissions_unit_container_fkey" type="fk" pk-ref="39" fk-ref="8"/>
+		<relation name="module_scopes_unit_container_fkey" fq-name="public.module_organizational_scopes.module_scopes_unit_container_fkey" type="fk" pk-ref="39" fk-ref="14"/>
+		<relation name="template_scopes_unit_container_fkey" fq-name="public.template_organizational_scopes.template_scopes_unit_container_fkey" type="fk" pk-ref="39" fk-ref="37"/>
+		<relation name="unit_container_items_container_id_fkey" fq-name="public.unit_container_items.unit_container_items_container_id_fkey" type="fk" pk-ref="39" fk-ref="38"/>
+		<relation name="context_permissions_user_context_id_fkey" fq-name="public.context_permissions.context_permissions_user_context_id_fkey" type="fk" pk-ref="41" fk-ref="6"/>
+		<relation name="Record_created_by_fkey" fq-name="public.&quot;Record&quot;.&quot;Record_created_by_fkey&quot;" type="fk" pk-ref="42" fk-ref="2"/>
+		<relation name="Record_updated_by_fkey" fq-name="public.&quot;Record&quot;.&quot;Record_updated_by_fkey&quot;" type="fk" pk-ref="42" fk-ref="2"/>
+		<relation name="audit_logs_user_id_fkey" fq-name="public.audit_logs.audit_logs_user_id_fkey" type="fk" pk-ref="42" fk-ref="3"/>
+		<relation name="group_members_user_id_fkey" fq-name="public.group_members.group_members_user_id_fkey" type="fk" pk-ref="42" fk-ref="7"/>
+		<relation name="provider_hierarchy_history_changed_by_fkey" fq-name="public.provider_hierarchy_history.provider_hierarchy_history_changed_by_fkey" type="fk" pk-ref="42" fk-ref="27"/>
+		<relation name="record_history_created_by_fkey" fq-name="public.record_history.record_history_created_by_fkey" type="fk" pk-ref="42" fk-ref="30"/>
+		<relation name="security_logs_user_id_fkey" fq-name="public.security_logs.security_logs_user_id_fkey" type="fk" pk-ref="42" fk-ref="34"/>
+		<relation name="system_logs_user_id_fkey" fq-name="public.system_logs.system_logs_user_id_fkey" type="fk" pk-ref="42" fk-ref="35"/>
+		<relation name="user_contexts_user_id_fkey" fq-name="public.user_contexts.user_contexts_user_id_fkey" type="fk" pk-ref="42" fk-ref="41"/>
+		<relation name="workflow_state_history_changed_by_fkey" fq-name="public.workflow_state_history.workflow_state_history_changed_by_fkey" type="fk" pk-ref="42" fk-ref="44"/>
+		<relation name="workflow_transition_history_triggered_by_fkey" fq-name="public.workflow_transition_history.workflow_transition_history_triggered_by_fkey" type="fk" pk-ref="42" fk-ref="46"/>
+		<relation name="workflow_trigger_executions_triggered_by_fkey" fq-name="public.workflow_trigger_executions.workflow_trigger_executions_triggered_by_fkey" type="fk" pk-ref="42" fk-ref="48"/>
+		<relation name="workflows_created_by_fkey" fq-name="public.workflows.workflows_created_by_fkey" type="fk" pk-ref="42" fk-ref="50"/>
+		<relation name="workflows_updated_by_fkey" fq-name="public.workflows.workflows_updated_by_fkey" type="fk" pk-ref="42" fk-ref="50"/>
+		<relation name="workflow_state_history_workflow_record_id_fkey" fq-name="public.workflow_state_history.workflow_state_history_workflow_record_id_fkey" type="fk" pk-ref="43" fk-ref="44"/>
+		<relation name="workflow_transition_history_workflow_record_id_fkey" fq-name="public.workflow_transition_history.workflow_transition_history_workflow_record_id_fkey" type="fk" pk-ref="43" fk-ref="46"/>
+		<relation name="workflow_records_current_state_id_fkey" fq-name="public.workflow_records.workflow_records_current_state_id_fkey" type="fk" pk-ref="45" fk-ref="43"/>
+		<relation name="workflow_state_history_state_id_fkey" fq-name="public.workflow_state_history.workflow_state_history_state_id_fkey" type="fk" pk-ref="45" fk-ref="44"/>
+		<relation name="workflow_transitions_from_state_id_fkey" fq-name="public.workflow_transitions.workflow_transitions_from_state_id_fkey" type="fk" pk-ref="45" fk-ref="47"/>
+		<relation name="workflow_transitions_to_state_id_fkey" fq-name="public.workflow_transitions.workflow_transitions_to_state_id_fkey" type="fk" pk-ref="45" fk-ref="47"/>
+		<relation name="workflow_transition_history_transition_id_fkey" fq-name="public.workflow_transition_history.workflow_transition_history_transition_id_fkey" type="fk" pk-ref="47" fk-ref="46"/>
+		<relation name="workflow_trigger_executions_trigger_id_fkey" fq-name="public.workflow_trigger_executions.workflow_trigger_executions_trigger_id_fkey" type="fk" pk-ref="49" fk-ref="48"/>
+		<relation name="workflow_records_workflow_id_fkey" fq-name="public.workflow_records.workflow_records_workflow_id_fkey" type="fk" pk-ref="50" fk-ref="43"/>
+		<relation name="workflow_states_workflow_id_fkey" fq-name="public.workflow_states.workflow_states_workflow_id_fkey" type="fk" pk-ref="50" fk-ref="45"/>
+		<relation name="workflow_transitions_workflow_id_fkey" fq-name="public.workflow_transitions.workflow_transitions_workflow_id_fkey" type="fk" pk-ref="50" fk-ref="47"/>
+		<relation name="workflow_triggers_workflow_id_fkey" fq-name="public.workflow_triggers.workflow_triggers_workflow_id_fkey" type="fk" pk-ref="50" fk-ref="49"/>
+	</relations>
+</diagram>

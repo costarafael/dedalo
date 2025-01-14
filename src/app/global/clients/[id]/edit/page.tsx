@@ -18,11 +18,13 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
-import { getClients, updateClient } from "@/lib/api/clients"
-import { createClientSchema } from "@/lib/validations/client"
-import type { Client } from "@/lib/api/clients"
+import { clientService } from "@/lib/core/services/client.service"
+import { clientSchema } from "@/lib/core/validations/client.validation"
+import type { Client } from "@/lib/core/interfaces/repository.interfaces"
 
-const formSchema = createClientSchema
+const formSchema = clientSchema.extend({
+  email: z.string().email("Email inválido").min(1, "Email é obrigatório"),
+})
 
 export default function EditClientPage() {
   const params = useParams()
@@ -42,29 +44,20 @@ export default function EditClientPage() {
   useEffect(() => {
     async function loadClient() {
       try {
-        const clients = await getClients()
-        const client = clients.find(c => c.id === params.id)
-        if (!client) {
-          toast({
-            title: "Cliente não encontrado",
-            description: "O cliente solicitado não foi encontrado.",
-            variant: "destructive",
-          })
-          router.push("/global/clients")
-          return
-        }
+        const client = await clientService.getClient(params.id as string)
         setClient(client)
         form.reset({
           name: client.name,
-          email: client.email,
+          email: client.metadata?.email || "",
         })
       } catch (error) {
         console.error('Erro ao carregar cliente:', error)
         toast({
           title: "Erro ao carregar cliente",
-          description: "Ocorreu um erro ao carregar os dados do cliente.",
+          description: "O cliente solicitado não foi encontrado.",
           variant: "destructive",
         })
+        router.push("/global/clients")
       } finally {
         setIsLoading(false)
       }
@@ -77,8 +70,12 @@ export default function EditClientPage() {
     if (!client) return
 
     try {
-      await updateClient(client.id, {
-        ...values,
+      await clientService.updateClient(client.id, {
+        name: values.name,
+        metadata: {
+          ...client.metadata,
+          email: values.email,
+        },
         updated_at: new Date().toISOString(),
       })
       

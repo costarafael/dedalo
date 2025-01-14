@@ -1,305 +1,162 @@
-import { getBrowserClient } from '@/lib/database/supabase'
-import { 
-  Provider,
-  EntityInsert,
-  EntityUpdate,
-  IProviderRepository, 
-  TABLES,
-  CONTEXT_TYPES,
-  ProviderHierarchyRow,
-  CreateProviderDTO
-} from '../interfaces'
+import { SupabaseClient } from "@supabase/supabase-js"
+import { supabase } from "@/lib/database/supabase"
+import { Provider, ProviderHierarchyRow, CONTEXT_TYPES } from "@/lib/core/interfaces/repository.interfaces"
 
-export class ProviderRepository implements IProviderRepository {
-  private supabase = getBrowserClient()
+export class ProviderRepository {
+  private supabase: SupabaseClient
+  private table = "entity"
+  private hierarchyTable = "provider_hierarchies"
+
+  constructor() {
+    this.supabase = supabase
+  }
+
+  private transformProvider(data: any): Provider {
+    return {
+      id: data.id,
+      name: data.name,
+      status: data.status,
+      is_active: data.is_active,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+    }
+  }
 
   async findAll(): Promise<Provider[]> {
     const { data, error } = await this.supabase
-      .from(TABLES.ENTITY)
-      .select(`
-        *,
-        provider_hierarchies:provider_hierarchies!provider_hierarchies_provider_id_fkey(
-          client_id,
-          parent_provider_id,
-          root_provider_id,
-          client:entity!provider_hierarchies_client_id_fkey(
-            id,
-            name
-          )
-        )
-      `)
-      .eq('type', CONTEXT_TYPES.PROVIDER)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
+      .from(this.table)
+      .select("*")
+      .eq("type", CONTEXT_TYPES.PROVIDER)
+      .is("deleted_at", null)
+      .order("name")
 
     if (error) throw error
-    return data?.map(entity => ({
-      ...entity,
-      type: CONTEXT_TYPES.PROVIDER,
-      metadata: {
-        document: '',
-        email: '',
-      }
-    })) || []
+    return (data || []).map(this.transformProvider)
   }
 
   async findByClient(clientId: string): Promise<Provider[]> {
     const { data, error } = await this.supabase
-      .from(TABLES.ENTITY)
+      .from(this.hierarchyTable)
       .select(`
-        *,
-        provider_hierarchies:provider_hierarchies!provider_hierarchies_provider_id_fkey(
-          client_id,
-          parent_provider_id,
-          root_provider_id,
-          client:entity!provider_hierarchies_client_id_fkey(
-            id,
-            name
-          )
-        )
+        provider:entity!provider_hierarchies_provider_id_fkey(*)
       `)
-      .eq('type', CONTEXT_TYPES.PROVIDER)
-      .eq('provider_hierarchies.client_id', clientId)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
+      .eq("client_id", clientId)
+      .eq("provider.type", CONTEXT_TYPES.PROVIDER)
+      .is("provider.deleted_at", null)
+      .order("created_at")
 
     if (error) throw error
-    return data?.map(entity => ({
-      ...entity,
-      type: CONTEXT_TYPES.PROVIDER,
-      metadata: {
-        document: '',
-        email: '',
-      }
-    })) || []
-  }
-
-  async findChildren(providerId: string): Promise<Provider[]> {
-    const { data, error } = await this.supabase
-      .from(TABLES.ENTITY)
-      .select(`
-        *,
-        provider_hierarchies:provider_hierarchies!provider_hierarchies_provider_id_fkey(
-          client_id,
-          parent_provider_id,
-          root_provider_id,
-          client:entity!provider_hierarchies_client_id_fkey(
-            id,
-            name
-          )
-        )
-      `)
-      .eq('type', CONTEXT_TYPES.PROVIDER)
-      .eq('provider_hierarchies.parent_provider_id', providerId)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-
-    if (error) throw error
-    return data?.map(entity => ({
-      ...entity,
-      type: CONTEXT_TYPES.PROVIDER,
-      metadata: {
-        document: '',
-        email: '',
-      }
-    })) || []
-  }
-
-  async findHierarchy(providerId: string): Promise<ProviderHierarchyRow[]> {
-    const { data, error } = await this.supabase
-      .from(TABLES.PROVIDER_HIERARCHIES)
-      .select('*')
-      .eq('provider_id', providerId)
-      .is('deleted_at', null)
-
-    if (error) throw error
-    return data || []
+    return (data?.map((row: any) => this.transformProvider(row.provider)) || [])
   }
 
   async findById(id: string): Promise<Provider | null> {
     const { data, error } = await this.supabase
-      .from(TABLES.ENTITY)
-      .select(`
-        *,
-        provider_hierarchies:provider_hierarchies!provider_hierarchies_provider_id_fkey(
-          client_id,
-          parent_provider_id,
-          root_provider_id,
-          client:entity!provider_hierarchies_client_id_fkey(
-            id,
-            name
-          )
-        )
-      `)
-      .eq('id', id)
-      .eq('type', CONTEXT_TYPES.PROVIDER)
-      .is('deleted_at', null)
+      .from(this.table)
+      .select("*")
+      .eq("id", id)
+      .eq("type", CONTEXT_TYPES.PROVIDER)
+      .is("deleted_at", null)
       .single()
 
     if (error) throw error
-    if (!data) return null
-
-    return {
-      ...data,
-      type: CONTEXT_TYPES.PROVIDER,
-      metadata: {
-        document: '',
-        email: '',
-      }
-    }
+    return data ? this.transformProvider(data) : null
   }
 
-  async create(data: Partial<EntityInsert>): Promise<Provider> {
+  async create(data: { name: string }): Promise<Provider> {
     const now = new Date().toISOString()
-    const payload: EntityInsert = {
-      id: data.id || `PV${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-      name: data.name,
-      type: CONTEXT_TYPES.PROVIDER,
-      status: 'RUNNING',
-      created_at: now,
-      updated_at: now,
-      is_active: true,
-      deleted_at: null
-    }
 
     const { data: provider, error } = await this.supabase
-      .from(TABLES.ENTITY)
-      .insert(payload)
-      .select(`
-        *,
-        provider_hierarchies:provider_hierarchies!provider_hierarchies_provider_id_fkey(
-          client_id,
-          parent_provider_id,
-          root_provider_id,
-          client:entity!provider_hierarchies_client_id_fkey(
-            id,
-            name
-          )
-        )
-      `)
-      .single()
-
-    if (error) throw error
-
-    // Se tiver parent_provider_id ou client_id, adiciona à hierarquia
-    if (data.parent_provider_id || data.client_id) {
-      await this.addToHierarchy(provider.id, data.parent_provider_id!, data.client_id)
-    }
-
-    return {
-      ...provider,
-      type: CONTEXT_TYPES.PROVIDER,
-      metadata: {
-        document: '',
-        email: '',
-      }
-    }
-  }
-
-  async update(id: string, data: Partial<EntityUpdate>): Promise<Provider> {
-    // Validar nome único se estiver sendo atualizado
-    if (data.name) {
-      const exists = await this.validateUniqueName(data.name, id)
-      if (exists) {
-        throw new Error("Já existe um provider com este nome")
-      }
-    }
-
-    const payload = {
-      ...data,
-      updated_at: new Date().toISOString()
-    }
-
-    const { data: provider, error } = await this.supabase
-      .from(TABLES.ENTITY)
-      .update(payload)
-      .eq('id', id)
-      .eq('type', CONTEXT_TYPES.PROVIDER)
-      .select(`
-        *,
-        provider_hierarchies:provider_hierarchies!provider_hierarchies_provider_id_fkey(
-          client_id,
-          parent_provider_id,
-          root_provider_id,
-          client:entity!provider_hierarchies_client_id_fkey(
-            id,
-            name
-          )
-        )
-      `)
-      .single()
-
-    if (error) throw error
-    return {
-      ...provider,
-      type: CONTEXT_TYPES.PROVIDER,
-      metadata: {
-        document: '',
-        email: '',
-      }
-    }
-  }
-
-  async delete(id: string): Promise<void> {
-    const { error } = await this.supabase
-      .from(TABLES.ENTITY)
-      .update({
-        is_active: false,
-        deleted_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .eq('type', CONTEXT_TYPES.PROVIDER)
-
-    if (error) throw error
-  }
-
-  async addToHierarchy(providerId: string, parentId: string, clientId?: string): Promise<ProviderHierarchyRow> {
-    const { data, error } = await this.supabase
-      .from(TABLES.PROVIDER_HIERARCHIES)
+      .from(this.table)
       .insert({
-        provider_id: providerId,
-        parent_provider_id: parentId,
-        client_id: clientId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_active: true
+        id: crypto.randomUUID(),
+        name: data.name,
+        type: CONTEXT_TYPES.PROVIDER,
+        status: "RUNNING",
+        is_active: true,
+        created_at: now,
+        updated_at: now,
       })
       .select()
       .single()
 
     if (error) throw error
-    return data
+    return this.transformProvider(provider)
   }
 
-  async removeFromHierarchy(providerId: string, parentId: string): Promise<void> {
-    const { error } = await this.supabase
-      .from(TABLES.PROVIDER_HIERARCHIES)
-      .update({
-        is_active: false,
-        deleted_at: new Date().toISOString()
-      })
-      .eq('provider_id', providerId)
-      .eq('parent_provider_id', parentId)
+  async addToHierarchy(data: { provider_id: string; client_id?: string; parent_provider_id?: string }): Promise<ProviderHierarchyRow> {
+    const now = new Date().toISOString()
 
-    if (error) throw error
-  }
-
-  // Métodos auxiliares
-  private async validateUniqueName(name: string, excludeId?: string): Promise<boolean> {
-    const query = this.supabase
-      .from(TABLES.ENTITY)
-      .select('id')
-      .eq('type', CONTEXT_TYPES.PROVIDER)
-      .eq('name', name)
-      .is('deleted_at', null)
-
-    if (excludeId) {
-      query.neq('id', excludeId)
+    // Se não tiver client_id nem parent_provider_id, lança erro
+    if (!data.client_id && !data.parent_provider_id) {
+      throw new Error("Provider must be linked to a client or another provider")
     }
 
-    const { data, error } = await query.single()
-    if (error && error.code === 'PGRST116') return false // No rows returned
+    // Se tiver parent_provider_id, busca a hierarquia do provider pai para pegar o client_id
+    let clientId = data.client_id
+    let rootProviderId = data.provider_id
+    let level = 1
+
+    if (data.parent_provider_id) {
+      const { data: parentHierarchy, error: parentError } = await this.supabase
+        .from(this.hierarchyTable)
+        .select("*")
+        .eq("provider_id", data.parent_provider_id)
+        .single()
+
+      if (parentError) throw parentError
+      if (!parentHierarchy) throw new Error("Parent provider hierarchy not found")
+
+      clientId = parentHierarchy.client_id
+      rootProviderId = parentHierarchy.root_provider_id
+      level = (parentHierarchy.level || 1) + 1
+    }
+
+    const { data: hierarchy, error } = await this.supabase
+      .from(this.hierarchyTable)
+      .insert({
+        id: crypto.randomUUID(),
+        provider_id: data.provider_id,
+        client_id: data.parent_provider_id ? null : clientId, // Se tiver parent_provider_id, não envia client_id
+        parent_provider_id: data.parent_provider_id,
+        root_provider_id: rootProviderId,
+        is_active: true,
+        level,
+        created_at: now,
+        updated_at: now,
+      })
+      .select()
+      .single()
+
     if (error) throw error
-    return !!data
+    return hierarchy
+  }
+
+  async update(id: string, data: Partial<Provider>): Promise<Provider> {
+    const { data: provider, error } = await this.supabase
+      .from(this.table)
+      .update({
+        ...data,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("type", CONTEXT_TYPES.PROVIDER)
+      .select()
+      .single()
+
+    if (error) throw error
+    return this.transformProvider(provider)
+  }
+
+  async delete(id: string): Promise<void> {
+    const { error } = await this.supabase
+      .from(this.table)
+      .update({
+        deleted_at: new Date().toISOString(),
+        is_active: false,
+      })
+      .eq("id", id)
+      .eq("type", CONTEXT_TYPES.PROVIDER)
+
+    if (error) throw error
   }
 } 

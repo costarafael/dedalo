@@ -1,303 +1,88 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { Plus, ChevronRight, ChevronDown, Trash2, Edit } from "lucide-react"
+import { useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "sonner"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-
-import { getNodeNames, createNodeName, type NodeName, updateNodeOrder, updateNodeName, deleteNodeName } from "@/lib/api/node-names"
-import { 
-  getOrganizationalUnits, 
-  createOrganizationalUnit, 
-  getRootUnit, 
-  type OrganizationalUnit,
-  type NewOrganizationalUnit 
-} from "@/lib/api/organizational-units"
-import { getNodeHierarchyRules, createNodeHierarchyRule } from "@/lib/api/node-hierarchies"
-import { getUnitHierarchies, createUnitHierarchy, type UnitHierarchy } from "@/lib/api/unit-hierarchies"
-import { getUnitContainers, createUnitContainer, type UnitContainer } from "@/lib/api/unit-containers"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useNodeHierarchies } from "@/lib/http/hooks/use-node-hierarchies"
+import { useOrganizationalUnits } from "@/lib/http/hooks/use-organizational-units"
+import { ExcelImportExport } from "./excel-import-export"
 import { UnitContainerManager } from "./unit-container-manager"
 import { OrganizationalUnitsLoading } from "./loading"
 import { NodeList } from "./node-list"
-import { ExcelImportExport } from "./excel-import-export"
+import { NodeName } from "@/lib/core/interfaces/repository.interfaces"
 
 interface Props {
   id: string
 }
 
-const formSchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório"),
-  unit_selection_mode: z.enum(["single", "multiple"]),
-})
-
-type FormData = z.infer<typeof formSchema>
-
 export function OrganizationalUnitsManager({ id }: Props) {
-  const [nodes, setNodes] = useState<NodeName[]>([])
-  const [units, setUnits] = useState<OrganizationalUnit[]>([])
-  const [containers, setContainers] = useState<UnitContainer[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedNode, setSelectedNode] = useState<string>("")
-  const [newNodeName, setNewNodeName] = useState("")
+  const queryClient = useQueryClient()
+  const [selectedNode, setSelectedNode] = useState("")
   const [newUnitName, setNewUnitName] = useState("")
   const [selectedParentUnits, setSelectedParentUnits] = useState<string[]>([])
   const [activeTab, setActiveTab] = useState("nodes")
-  const [rootUnit, setRootUnit] = useState<OrganizationalUnit | null>(null)
-  const [hierarchies, setHierarchies] = useState<UnitHierarchy[]>([])
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      unit_selection_mode: "single",
-    },
-  })
+  const { hierarchies, isLoading: isLoadingHierarchies, createHierarchy } = useNodeHierarchies()
+  const { 
+    nodes, 
+    units, 
+    rootUnit, 
+    isLoading,
+    createNode,
+    updateNodeOrder,
+    updateNode,
+    deleteNode,
+    createUnit
+  } = useOrganizationalUnits(id)
 
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true)
-      const [nodesData, unitsData, containersData, rootUnitData, hierarchiesData] = await Promise.all([
-        getNodeNames(id),
-        getOrganizationalUnits(id),
-        getUnitContainers(id),
-        getRootUnit(id),
-        getUnitHierarchies(id)
-      ])
-      setNodes(nodesData)
-      setUnits(unitsData)
-      setContainers(containersData)
-      setRootUnit(rootUnitData)
-      setHierarchies(hierarchiesData)
+  const handleNodeSubmit = (data: { name: string, unit_selection_mode: "single" | "multiple" }) => {
+    createNode(data)
+  }
 
-      console.log('Loaded data:', { 
-        nodes: nodesData, 
-        units: unitsData, 
-        containers: containersData, 
-        rootUnit: rootUnitData, 
-        hierarchies: hierarchiesData 
-      })
-    } catch (error) {
-      console.error("Erro ao carregar dados:", error)
-      toast.error("Erro ao carregar dados")
-    } finally {
-      setLoading(false)
-    }
-  }, [id])
-
-  useEffect(() => {
-    loadData()
-  }, [loadData])
-
-  const handleNodeNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewNodeName(e.target.value)
-  }, [])
-
-  const handleNodeSubmit = useCallback(async (data: FormData) => {
-    try {
-      await createNodeName({
-        client_id: id,
-        name: data.name,
-        unit_selection_mode: data.unit_selection_mode,
-      })
-      
-      form.reset()
-      toast.success("Node criado com sucesso")
-      loadData()
-    } catch (error) {
-      console.error("Erro ao criar node:", error)
-      toast.error("Erro ao criar node")
-    }
-  }, [id, form, loadData])
-
-  const handleCreateUnit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleCreateUnit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!newUnitName || !selectedNode) return
 
-    try {
-      const newUnit: NewOrganizationalUnit = {
-        id: crypto.randomUUID(),
-        client_id: id,
-        name: newUnitName,
-        node_name_id: selectedNode,
-        type: "OPTION" as const,
-        updated_at: new Date().toISOString(),
-        is_active: true,
-        deleted_at: null
+    createUnit({
+      name: newUnitName,
+      node_name_id: selectedNode,
+    }, {
+      onSuccess: (newUnit) => {
+        // Criar hierarquias para cada unidade pai selecionada
+        if (selectedParentUnits.length > 0) {
+          selectedParentUnits.forEach(parentId =>
+            createHierarchy({
+              parent_node_id: parentId,
+              child_node_id: newUnit.id,
+            })
+          )
+        } else if (rootUnit) {
+          // Se nenhuma unidade pai foi selecionada, criar hierarquia com a unidade raiz
+          createHierarchy({
+            parent_node_id: rootUnit.id,
+            child_node_id: newUnit.id,
+          })
+        }
+
+        setNewUnitName("")
+        setSelectedParentUnits([])
+        setSelectedNode("")
       }
+    })
+  }
 
-      const createdUnit = await createOrganizationalUnit(newUnit)
-
-      // Se não houver unidades pai selecionadas e existir uma unidade root, usar root como pai
-      const parentUnits = selectedParentUnits.length > 0 
-        ? selectedParentUnits 
-        : (rootUnit ? [rootUnit.id] : [])
-
-      await Promise.all(parentUnits.map(async (parentId, index) => {
-        await createUnitHierarchy({
-          id: crypto.randomUUID(),
-          parent_id: parentId,
-          child_id: createdUnit.id,
-          is_primary: index === 0,
-          updated_at: new Date().toISOString(),
-          is_active: true,
-          deleted_at: null
-        })
-      }))
-
-      setNewUnitName("")
-      setSelectedParentUnits([])
-      setSelectedNode("")
-      toast.success("Unidade organizacional criada com sucesso")
-      loadData()
-    } catch (error) {
-      console.error("Erro ao criar unidade:", error)
-      if (error instanceof Error) {
-        toast.error(error.message)
-      } else {
-        toast.error("Erro ao criar unidade")
-      }
-    }
-  }, [id, newUnitName, selectedNode, selectedParentUnits, rootUnit, loadData])
-
-  const handleCreateContainer = useCallback(async (data: { container: any, unitIds: string[] }) => {
-    console.log('handleCreateContainer called with data:', data);
-
-    try {
-      const uniqueContainerKey = crypto.randomUUID();
-      console.log('Generated unique container_key:', uniqueContainerKey);
-
-      const containerData = {
-        ...data.container,
-        container_key: uniqueContainerKey,
-      };
-
-      await createUnitContainer(containerData, data.unitIds);
-
-      console.log('Container created successfully');
-      toast.success("Container criado com sucesso");
-      loadData();
-    } catch (error) {
-      console.error("Erro ao criar container:", error);
-      toast.error("Erro ao criar container");
-    }
-
-    console.log('handleCreateContainer finished')
-  }, [loadData]);
-
-  const getUnitParents = useCallback((unitId: string) => {
-    return hierarchies
-      .filter(h => h.child_id === unitId)
-      .map(h => units.find(u => u.id === h.parent_id))
-      .filter((parent): parent is OrganizationalUnit => parent !== undefined)
-  }, [hierarchies, units])
-
-  const getUnitChildren = useCallback((unitId: string) => {
-    return hierarchies
-      .filter(h => h.parent_id === unitId)
-      .map(h => units.find(u => u.id === h.child_id))
-      .filter((child): child is OrganizationalUnit => child !== undefined)
-  }, [hierarchies, units])
-
-  const handleReorderNodes = useCallback(async (newNodes: NodeName[]) => {
-    try {
-      await updateNodeOrder(newNodes)
-      setNodes(newNodes)
-    } catch (error) {
-      console.error("Erro ao reordenar nodes:", error)
-      toast.error("Erro ao reordenar nodes")
-    }
-  }, [])
-
-  const handleEditNode = useCallback(async (node: NodeName) => {
+  const handleEditNode = (node: NodeName) => {
     const newName = prompt("Novo nome do node:", node.name)
     if (!newName || newName === node.name) return
 
-    try {
-      await updateNodeName(node.id, { name: newName })
-      toast.success("Node atualizado com sucesso")
-      loadData()
-    } catch (error) {
-      console.error("Erro ao editar node:", error)
-      toast.error("Erro ao editar node")
-    }
-  }, [loadData])
+    updateNode({ id: node.id, data: { name: newName } })
+  }
 
-  const handleDeleteNode = useCallback(async (node: NodeName) => {
-    if (!confirm(`Tem certeza que deseja excluir o node "${node.name}"?`)) return
-
-    try {
-      await deleteNodeName(node.id)
-      toast.success("Node excluído com sucesso")
-      loadData()
-    } catch (error) {
-      console.error("Erro ao excluir node:", error)
-      toast.error("Erro ao excluir node")
-    }
-  }, [loadData])
-
-  const handleImportExcel = useCallback(async (data: {
-    nodes: Partial<NodeName>[]
-    units: Partial<OrganizationalUnit>[]
-    hierarchies: Partial<UnitHierarchy>[]
-  }) => {
-    try {
-      // Criar nodes
-      await Promise.all(data.nodes.map(async (node) => {
-        if (!node.name) return
-        await createNodeName({
-          client_id: id,
-          name: node.name,
-          description: node.description,
-          validationType: node.validationType,
-          is_required: node.is_required,
-        })
-      }))
-
-      // Criar unidades
-      const createdUnits = await Promise.all(data.units.map(async (unit) => {
-        if (!unit.name || !unit.node_name_id) return null
-        return await createOrganizationalUnit({
-          id: crypto.randomUUID(),
-          client_id: id,
-          name: unit.name,
-          node_name_id: unit.node_name_id,
-          type: unit.type || "OPTION",
-          is_active: unit.is_active ?? true,
-          updated_at: new Date().toISOString(),
-          deleted_at: null
-        })
-      }))
-
-      // Criar hierarquias
-      await Promise.all(data.hierarchies.map(async (hierarchy) => {
-        if (!hierarchy.parent_id || !hierarchy.child_id) return
-        await createUnitHierarchy({
-          id: crypto.randomUUID(),
-          parent_id: hierarchy.parent_id,
-          child_id: hierarchy.child_id,
-          is_primary: hierarchy.is_primary ?? false,
-          is_active: hierarchy.is_active ?? true,
-          updated_at: new Date().toISOString(),
-          deleted_at: null
-        })
-      }))
-
-      loadData()
-    } catch (error) {
-      console.error("Erro ao importar dados:", error)
-      throw error
-    }
-  }, [id, loadData])
-
-  if (loading) {
+  if (isLoading || isLoadingHierarchies) {
     return <OrganizationalUnitsLoading />
   }
 
@@ -310,7 +95,11 @@ export function OrganizationalUnitsManager({ id }: Props) {
           nodes={nodes}
           units={units}
           hierarchies={hierarchies}
-          onImport={handleImportExcel}
+          onImport={() => {
+            queryClient.invalidateQueries({ queryKey: ["nodes", id] })
+            queryClient.invalidateQueries({ queryKey: ["units", id] })
+            queryClient.invalidateQueries({ queryKey: ["node-hierarchies"] })
+          }}
         />
       </div>
 
@@ -322,21 +111,26 @@ export function OrganizationalUnitsManager({ id }: Props) {
         </TabsList>
 
         <TabsContent value="nodes" className="space-y-4">
-          <form onSubmit={form.handleSubmit(handleNodeSubmit)} className="flex gap-4">
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            const formData = new FormData(e.currentTarget)
+            handleNodeSubmit({
+              name: formData.get("name") as string,
+              unit_selection_mode: formData.get("unit_selection_mode") as "single" | "multiple"
+            })
+            e.currentTarget.reset()
+          }} className="flex gap-4">
             <div className="flex-1">
               <Label htmlFor="node-name">Nome do Node</Label>
               <Input
                 id="node-name"
-                {...form.register("name")}
+                name="name"
                 placeholder="Ex: Empreendimento"
               />
             </div>
             <div>
               <Label htmlFor="unit-selection-mode">Modo de Seleção</Label>
-              <Select 
-                onValueChange={(value: "single" | "multiple") => form.setValue("unit_selection_mode", value)}
-                defaultValue={form.getValues("unit_selection_mode")}
-              >
+              <Select name="unit_selection_mode" defaultValue="single">
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um modo" />
                 </SelectTrigger>
@@ -347,16 +141,15 @@ export function OrganizationalUnitsManager({ id }: Props) {
               </Select>
             </div>
             <Button type="submit" className="mt-8">
-              <Plus className="w-4 h-4 mr-2" />
               Criar Node
             </Button>
           </form>
 
           <NodeList
             nodes={nodes}
-            onReorder={handleReorderNodes}
+            onReorder={updateNodeOrder}
             onEdit={handleEditNode}
-            onDelete={handleDeleteNode}
+            onDelete={deleteNode}
           />
         </TabsContent>
 
@@ -451,23 +244,19 @@ export function OrganizationalUnitsManager({ id }: Props) {
               className="mt-8"
               disabled={!newUnitName || !selectedNode}
             >
-              <Plus className="w-4 h-4 mr-2" />
               Criar Unidade
             </Button>
           </form>
 
           <div className="space-y-2">
             {units.map((unit) => {
-              const parents = getUnitParents(unit.id)
-              const children = getUnitChildren(unit.id)
-              const node = nodes.find((n) => n.id === unit.node_name_id)
-              const primaryParent = parents.find(p => 
-                hierarchies.find(h => 
-                  h.parent_id === p.id && 
-                  h.child_id === unit.id && 
-                  h.is_primary
-                )
+              const parents = units.filter(u => 
+                hierarchies.some(h => h.parent_node_id === u.id && h.child_node_id === unit.id)
               )
+              const children = units.filter(u => 
+                hierarchies.some(h => h.parent_node_id === unit.id && h.child_node_id === u.id)
+              )
+              const node = nodes.find((n) => n.id === unit.node_name_id)
 
               return (
                 <div key={unit.id} className="p-4 border rounded-lg">
@@ -487,11 +276,6 @@ export function OrganizationalUnitsManager({ id }: Props) {
                           {parents.map((p, i) => (
                             <span key={p.id}>
                               {p.name}
-                              {p.id === primaryParent?.id && (
-                                <span className="text-xs bg-primary/10 text-primary px-1 rounded ml-1">
-                                  Principal
-                                </span>
-                              )}
                               {i < parents.length - 1 ? ", " : ""}
                             </span>
                           ))}
@@ -516,7 +300,10 @@ export function OrganizationalUnitsManager({ id }: Props) {
             clientId={id}
             nodes={nodes}
             units={units}
-            onCreateContainer={handleCreateContainer}
+            onCreateContainer={() => {
+              queryClient.invalidateQueries({ queryKey: ["nodes", id] })
+              queryClient.invalidateQueries({ queryKey: ["units", id] })
+            }}
           />
         </TabsContent>
       </Tabs>

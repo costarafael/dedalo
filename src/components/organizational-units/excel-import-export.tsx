@@ -1,146 +1,94 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Download, Upload, FileSpreadsheet } from "lucide-react"
-import { exportToExcel, importFromExcel } from "@/lib/services/excel-service"
+import { exportToExcel, importFromExcel } from "@/lib/core/services/excel.service"
 import { toast } from "sonner"
-import type { NodeName } from "@/lib/api/node-names"
-import type { OrganizationalUnit } from "@/lib/api/organizational-units"
-import type { UnitHierarchy } from "@/lib/api/unit-hierarchies"
+import { NodeName, OrganizationalUnit, NodeHierarchyRule } from "@/lib/core/interfaces/repository.interfaces"
 
 interface Props {
   clientId: string
   clientName: string
   nodes: NodeName[]
   units: OrganizationalUnit[]
-  hierarchies: UnitHierarchy[]
-  onImport: (data: {
-    nodes: Partial<NodeName>[]
-    units: Partial<OrganizationalUnit>[]
-    hierarchies: Partial<UnitHierarchy>[]
-  }) => Promise<void>
+  hierarchies: NodeHierarchyRule[]
+  onImport: () => void
 }
 
-export function ExcelImportExport({
-  clientId,
-  clientName,
-  nodes,
-  units,
-  hierarchies,
-  onImport
-}: Props) {
-  const [isImporting, setIsImporting] = useState(false)
-  const [isExporting, setIsExporting] = useState(false)
-  const [importDialogOpen, setImportDialogOpen] = useState(false)
-
-  async function handleExport() {
+export function ExcelImportExport({ clientId, clientName, nodes, units, hierarchies, onImport }: Props) {
+  const handleExport = async () => {
     try {
-      setIsExporting(true)
-      exportToExcel({ nodes, units, hierarchies }, clientName)
-      toast.success("Arquivo exportado com sucesso!")
+      await exportToExcel({
+        clientId,
+        clientName,
+        nodes,
+        units,
+        hierarchies,
+      })
+      toast.success("Dados exportados com sucesso")
     } catch (error) {
-      console.error("Erro ao exportar:", error)
-      toast.error("Erro ao exportar arquivo")
-    } finally {
-      setIsExporting(false)
+      console.error("Erro ao exportar dados:", error)
+      toast.error("Erro ao exportar dados")
     }
   }
 
-  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-
+  const handleImport = async (file: File) => {
     try {
-      setIsImporting(true)
-      const result = await importFromExcel(file)
-
-      if (result.errors.length > 0) {
-        toast.error(
-          <div className="space-y-2">
-            <p>Erros ao importar arquivo:</p>
-            <ul className="list-disc pl-4">
-              {result.errors.map((error, i) => (
-                <li key={i}>{error}</li>
-              ))}
-            </ul>
-          </div>
-        )
-        return
-      }
-
-      await onImport(result)
-      toast.success("Arquivo importado com sucesso!")
-      setImportDialogOpen(false)
+      await importFromExcel({
+        clientId,
+        file,
+      })
+      toast.success("Dados importados com sucesso")
+      onImport()
     } catch (error) {
-      console.error("Erro ao importar:", error)
-      toast.error("Erro ao importar arquivo")
-    } finally {
-      setIsImporting(false)
-      e.target.value = "" // Limpa o input
+      console.error("Erro ao importar dados:", error)
+      toast.error("Erro ao importar dados")
     }
   }
 
   return (
     <div className="flex gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleExport}
-        disabled={isExporting}
-      >
-        {isExporting ? (
-          <>Exportando...</>
-        ) : (
-          <>
-            <Download className="w-4 h-4 mr-2" />
-            Exportar Excel
-          </>
-        )}
+      <Button variant="outline" onClick={handleExport}>
+        <Download className="w-4 h-4 mr-2" />
+        Exportar
       </Button>
-
-      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+      <Dialog>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
+          <Button variant="outline">
             <Upload className="w-4 h-4 mr-2" />
-            Importar Excel
+            Importar
           </Button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Importar Estrutura</DialogTitle>
+            <DialogTitle>Importar dados</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="excel-file">Selecione o arquivo Excel</Label>
-              <Input
-                id="excel-file"
+            <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg">
+              <FileSpreadsheet className="w-12 h-12 mb-4 text-muted-foreground" />
+              <input
                 type="file"
-                accept=".xlsx,.xls"
-                onChange={handleImport}
-                disabled={isImporting}
+                accept=".xlsx"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    handleImport(file)
+                  }
+                }}
+                className="hidden"
+                id="excel-import"
               />
-            </div>
-            <div className="text-sm text-muted-foreground space-y-2">
-              <p>O arquivo deve conter as seguintes abas:</p>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>Nodes</li>
-                <li>Unidades</li>
-                <li>Hierarquias</li>
-              </ul>
-              <p>
-                Faça primeiro uma exportação para ver o formato correto do arquivo.
+              <label
+                htmlFor="excel-import"
+                className="px-4 py-2 text-sm font-medium text-center border rounded-md cursor-pointer hover:bg-accent"
+              >
+                Selecionar arquivo
+              </label>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Selecione um arquivo Excel (.xlsx)
               </p>
             </div>
-            {isImporting && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <FileSpreadsheet className="w-4 h-4 animate-pulse" />
-                Importando...
-              </div>
-            )}
           </div>
         </DialogContent>
       </Dialog>

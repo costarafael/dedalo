@@ -8,11 +8,8 @@ export async function GET() {
     const clients = await clientRepository.findAll()
     return NextResponse.json(clients)
   } catch (error) {
-    console.error('Erro ao buscar clientes:', error)
-    return NextResponse.json(
-      { error: 'Não foi possível carregar a lista de clientes' },
-      { status: 500 }
-    )
+    console.error('Error fetching clients:', error)
+    return NextResponse.json({ error: 'Failed to fetch clients' }, { status: 500 })
   }
 }
 

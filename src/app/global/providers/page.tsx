@@ -2,39 +2,14 @@
 
 import { NewProviderDialog } from "@/components/dialogs/new-provider-dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getProviders } from "@/lib/api/providers"
-import { getClients } from "@/lib/api/clients"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Store } from "lucide-react"
 import Link from "next/link"
-import { useEffect, useState } from "react"
-import { toast } from "sonner"
+import { useProviders } from "@/lib/http/hooks/use-providers"
 import { Provider } from "@/lib/core/interfaces/repository.interfaces"
 
 export default function ProvidersPage() {
-  const [providers, setProviders] = useState<Provider[]>([])
-  const [clients, setClients] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-
-  async function loadData() {
-    try {
-      const [providersData, clientsData] = await Promise.all([
-        getProviders(),
-        getClients()
-      ])
-      setProviders(providersData || [])
-      setClients(clientsData || [])
-    } catch (error) {
-      console.error("Erro ao carregar dados:", error)
-      toast.error("Erro ao carregar dados")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    loadData()
-  }, [])
+  const { providers = [], isLoading } = useProviders()
 
   function getClientName(provider: Provider) {
     const hierarchy = provider.provider_hierarchies?.[0]
@@ -45,10 +20,10 @@ export default function ProvidersPage() {
   function getParentProviderName(provider: Provider) {
     const hierarchy = provider.provider_hierarchies?.[0]
     if (!hierarchy?.parent_provider_id) return null
-    return providers.find(p => p.id === hierarchy.parent_provider_id)?.name || "Provider não encontrado"
+    return providers.find((p: Provider) => p.id === hierarchy.parent_provider_id)?.name || "Provider não encontrado"
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container space-y-8 p-8">
         <div className="flex justify-between items-center">
@@ -68,11 +43,11 @@ export default function ProvidersPage() {
     <div className="container space-y-8 p-8">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Providers</h1>
-        <NewProviderDialog onProviderCreated={loadData} />
+        <NewProviderDialog />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {providers.map((provider) => (
+        {providers.map((provider: Provider) => (
           <Link key={provider.id} href={`/global/providers/${provider.id}`}>
             <Card className="hover:bg-accent/50 transition-colors cursor-pointer border-muted">
               <CardHeader className="space-y-1">

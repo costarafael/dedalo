@@ -1,80 +1,34 @@
-import { INodeService } from '../interfaces/service.interfaces'
-import { INodeRepository, INodeHierarchyRepository } from '../interfaces/repository.interfaces'
-import type { NodeName } from '../interfaces/repository.interfaces'
+import { NodeName } from "../interfaces/repository.interfaces"
+import { NodeRepository } from "../repositories/node.repository"
 
-export class NodeService implements INodeService {
-  constructor(
-    private nodeRepository: INodeRepository,
-    private nodeHierarchyRepository: INodeHierarchyRepository
-  ) {}
+export class NodeService {
+  private repository: NodeRepository
 
-  validateNode(data: Partial<NodeName>): boolean {
-    if (!data) return false
-    
-    // Validações básicas
-    if (data.name && data.name.length < 3) return false
-    if (!data.client_id) return false
-    if (!data.type) return false
-    
-    return true
+  constructor(repository?: NodeRepository) {
+    this.repository = repository || new NodeRepository()
   }
 
-  validateNodeData(data: any): boolean {
-    if (!data) return false
-    
-    // Validar estrutura básica
-    const requiredFields = ['name', 'client_id', 'type']
-    return requiredFields.every(field => field in data)
+  async getNodes(clientId: string): Promise<NodeName[]> {
+    return this.repository.findByClientId(clientId)
   }
 
-  transformNodeData(data: any): NodeName {
-    if (!this.validateNodeData(data)) {
-      throw new Error('Invalid node data structure')
-    }
-
-    return {
-      id: data.id,
-      name: data.name,
-      client_id: data.client_id,
-      type: data.type,
-      metadata: data.metadata || {},
-      created_at: data.created_at || new Date().toISOString(),
-      updated_at: data.updated_at || new Date().toISOString(),
-      deleted_at: data.deleted_at || null,
-      is_active: data.is_active ?? true
-    }
+  async createNode(data: { client_id: string; name: string; unit_selection_mode: "single" | "multiple" }): Promise<NodeName> {
+    return this.repository.create(data)
   }
 
-  async validateNodeName(name: string, clientId: string, excludeId?: string): Promise<boolean> {
-    // Verificar se já existe um nó com o mesmo nome para o cliente
-    const nodes = await this.nodeRepository.findByClientId(clientId)
-    return !nodes.some(node => 
-      node.name === name && 
-      node.id !== excludeId && 
-      !node.deleted_at
+  async updateNode(id: string, data: Partial<NodeName>): Promise<NodeName> {
+    return this.repository.update(id, data)
+  }
+
+  async deleteNode(id: string): Promise<void> {
+    return this.repository.delete(id)
+  }
+
+  async updateOrder(nodes: NodeName[]): Promise<void> {
+    await Promise.all(
+      nodes.map((node, index) =>
+        this.repository.update(node.id, { order: index })
+      )
     )
-  }
-
-  async validateHierarchy(parentId: string, childId: string): Promise<boolean> {
-    // Verificar se os nós existem
-    const [parent, child] = await Promise.all([
-      this.nodeRepository.findById(parentId),
-      this.nodeRepository.findById(childId)
-    ])
-
-    if (!parent || !child) return false
-    
-    // Verificar se são do mesmo cliente
-    if (parent.client_id !== child.client_id) return false
-    
-    // Verificar se não é o mesmo nó
-    if (parentId === childId) return false
-    
-    // TODO: Adicionar validações específicas de hierarquia
-    // - Verificar ciclos
-    // - Verificar regras de tipos de nós
-    // - etc
-    
-    return true
   }
 } 

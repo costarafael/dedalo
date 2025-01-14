@@ -60,8 +60,13 @@ export type ProviderHierarchyRow = Tables['provider_hierarchies']['Row']
 export type ProviderHierarchyInsert = Tables['provider_hierarchies']['Insert']
 export type ProviderHierarchyUpdate = Tables['provider_hierarchies']['Update']
 
-export interface Provider extends Entity {
-  type: typeof CONTEXT_TYPES.PROVIDER
+export interface Provider {
+  id: string
+  name: string
+  status: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
   provider_hierarchies?: Array<{
     client_id: string | null
     parent_provider_id: string | null
@@ -108,19 +113,48 @@ export interface Entity {
   is_active: boolean
 }
 
-export interface Client extends Entity {
-  type: typeof CONTEXT_TYPES.CLIENT
-  metadata: {
-    document: string
-    email: string
-    phone?: string | null
-    address?: string | null
-    [key: string]: any
-  }
+export interface Client {
+  id: string
+  name: string
+  status: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
 }
 
-export interface OrganizationalUnit extends OrganizationalUnitRow {}
-export interface NodeName extends NodeNameRow {}
+export interface OrganizationalUnit {
+  id: string
+  client_id: string
+  name: string
+  type: "ROOT" | "BRANCH" | "LEAF"
+  depth: number
+  order_index: number
+  is_active: boolean
+  node_name_id: string | null
+  full_path: string | null
+  metadata: Json | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export interface NodeName {
+  id: string
+  client_id: string
+  name: string
+  description: string | null
+  is_root: boolean | null
+  is_required: boolean
+  unit_count: number
+  order: number
+  unit_selection_mode: "single" | "multiple"
+  validationType: "FLEXIBLE" | "STRICT" | "CUSTOM"
+  metadata: Json
+  created_at: string
+  updated_at: string | null
+  deleted_at: string | null
+}
+
 export interface NodeHierarchyRule extends NodeHierarchyRuleRow {}
 export interface UnitHierarchy extends UnitHierarchyRow {}
 export interface UnitContainer extends UnitContainerRow {}
@@ -217,4 +251,14 @@ export type ModuleDependencyUpdate = Tables['module_dependencies']['Update']
 
 export type ModuleInstanceRow = Tables['module_instances']['Row']
 export type ModuleInstanceInsert = Tables['module_instances']['Insert']
-export type ModuleInstanceUpdate = Tables['module_instances']['Update'] 
+export type ModuleInstanceUpdate = Tables['module_instances']['Update']
+
+export interface INodeHierarchyRepository {
+  findAll(): Promise<NodeHierarchyRule[]>
+  findById(id: string): Promise<NodeHierarchyRule | null>
+  findByParentId(parentId: string): Promise<NodeHierarchyRule[]>
+  findByChildId(childId: string): Promise<NodeHierarchyRule[]>
+  create(data: Pick<NodeHierarchyRule, "parent_node_id" | "child_node_id"> & Partial<NodeHierarchyRule>): Promise<NodeHierarchyRule>
+  update(id: string, data: Partial<NodeHierarchyRule>): Promise<NodeHierarchyRule>
+  delete(id: string): Promise<void>
+} 

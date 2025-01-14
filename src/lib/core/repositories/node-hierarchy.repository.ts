@@ -1,47 +1,94 @@
-import { 
-  INodeHierarchyRepository, 
-  NodeHierarchyRule, 
-  NewNodeHierarchyRule
-} from '../interfaces'
-import { nodeHierarchyApi } from '@/lib/http/services/node-hierarchy.service'
+import { getBrowserClient } from "@/lib/database/supabase"
+import { NodeHierarchyRule } from "../interfaces/repository.interfaces"
 
-export class NodeHierarchyRepository implements INodeHierarchyRepository {
+export class NodeHierarchyRepository {
+  private readonly table = "node_hierarchy_rules"
+  private readonly supabase = getBrowserClient()
+
   async findAll(): Promise<NodeHierarchyRule[]> {
-    const { data } = await nodeHierarchyApi.getAll()
-    return data
+    const { data, error } = await this.supabase
+      .from(this.table)
+      .select("*")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+
+    if (error) throw error
+    return data || []
   }
 
   async findById(id: string): Promise<NodeHierarchyRule | null> {
-    const { data } = await nodeHierarchyApi.getById(id)
+    const { data, error } = await this.supabase
+      .from(this.table)
+      .select("*")
+      .eq("id", id)
+      .single()
+
+    if (error) throw error
     return data
   }
 
   async findByParentId(parentId: string): Promise<NodeHierarchyRule[]> {
-    const { data } = await nodeHierarchyApi.getByParentId(parentId)
-    return data
+    const { data, error } = await this.supabase
+      .from(this.table)
+      .select("*")
+      .eq("parent_node_id", parentId)
+      .is("deleted_at", null)
+
+    if (error) throw error
+    return data || []
   }
 
   async findByChildId(childId: string): Promise<NodeHierarchyRule[]> {
-    const { data } = await nodeHierarchyApi.getByChildId(childId)
-    return data
+    const { data, error } = await this.supabase
+      .from(this.table)
+      .select("*")
+      .eq("child_node_id", childId)
+      .is("deleted_at", null)
+
+    if (error) throw error
+    return data || []
   }
 
-  async create(data: NewNodeHierarchyRule): Promise<NodeHierarchyRule> {
-    const { data: rule } = await nodeHierarchyApi.create(data)
+  async create(data: { parent_node_id: string, child_node_id: string }): Promise<NodeHierarchyRule> {
+    const { data: rule, error } = await this.supabase
+      .from(this.table)
+      .insert({
+        id: crypto.randomUUID(),
+        ...data,
+        is_active: true,
+        metadata: {},
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single()
+
+    if (error) throw error
     return rule
   }
 
   async update(id: string, data: Partial<NodeHierarchyRule>): Promise<NodeHierarchyRule> {
-    const { data: rule } = await nodeHierarchyApi.update(id, data)
+    const { data: rule, error } = await this.supabase
+      .from(this.table)
+      .update({
+        ...data,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select()
+      .single()
+
+    if (error) throw error
     return rule
   }
 
   async delete(id: string): Promise<void> {
-    await nodeHierarchyApi.delete(id)
-  }
+    const { error } = await this.supabase
+      .from(this.table)
+      .update({
+        deleted_at: new Date().toISOString(),
+      })
+      .eq("id", id)
 
-  async validateRule(parentId: string, childId: string): Promise<boolean> {
-    const { data } = await nodeHierarchyApi.validateRule(parentId, childId)
-    return data
+    if (error) throw error
   }
 } 
