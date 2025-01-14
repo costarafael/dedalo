@@ -4,7 +4,7 @@ import { authInterceptor, refreshTokenInterceptor } from '../interceptors/auth.i
 
 // Configuração base do Axios
 const api: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: 'http://localhost:3000',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

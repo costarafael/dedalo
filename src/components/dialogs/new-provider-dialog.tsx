@@ -33,8 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Provider } from "@/types/provider"
-import { Client } from "@/types/client"
+import { Provider, Client } from "@/lib/core/interfaces/repository.interfaces"
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),

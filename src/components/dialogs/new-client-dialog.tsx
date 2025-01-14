@@ -26,19 +26,14 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
-import { createClient } from "@/lib/api/clients"
-import { createClientSchema } from "@/lib/validations/client"
+import { clientApi } from "@/lib/http/services/client.api"
+import { clientSchema } from "@/lib/core/validations/client.validation"
+import { Plus } from "lucide-react"
 
-const formSchema = createClientSchema
+const formSchema = clientSchema
 
-interface NewClientDialogProps {
-  onClientCreated?: () => void
-}
-
-export function NewClientDialog({ onClientCreated }: NewClientDialogProps) {
-  const [open, setOpen] = React.useState(false)
+export function NewClientDialog() {
   const router = useRouter()
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -48,28 +43,29 @@ export function NewClientDialog({ onClientCreated }: NewClientDialogProps) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await createClient(values)
+      await clientApi.create(values)
       toast.success("Cliente criado com sucesso!")
-      setOpen(false)
       form.reset()
-      onClientCreated?.()
       router.refresh()
     } catch (error) {
-      console.error('Erro ao criar cliente:', error)
+      console.error("Erro ao criar cliente:", error)
       toast.error("Erro ao criar cliente")
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog>
       <DialogTrigger asChild>
-        <Button>Novo Cliente</Button>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Novo Cliente
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Novo Cliente</DialogTitle>
           <DialogDescription>
-            Adicione um novo cliente ao sistema.
+            Preencha os dados do cliente para criar um novo registro.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -81,7 +77,7 @@ export function NewClientDialog({ onClientCreated }: NewClientDialogProps) {
                 <FormItem>
                   <FormLabel>Nome</FormLabel>
                   <FormControl>
-                    <Input placeholder="Digite o nome do cliente" {...field} />
+                    <Input placeholder="Nome do cliente" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -89,7 +85,7 @@ export function NewClientDialog({ onClientCreated }: NewClientDialogProps) {
             />
             <DialogFooter>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Criando..." : "Criar Cliente"}
+                {form.formState.isSubmitting ? "Criando..." : "Criar"}
               </Button>
             </DialogFooter>
           </form>

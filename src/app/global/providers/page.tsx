@@ -9,7 +9,7 @@ import { Store } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { Provider } from "@/types/provider"
+import { Provider } from "@/lib/core/interfaces/repository.interfaces"
 
 export default function ProvidersPage() {
   const [providers, setProviders] = useState<Provider[]>([])

@@ -22,16 +22,15 @@ export const clientApi = {
   getAll: async (): Promise<ApiResponse<Client[]>> => {
     const { data } = await api.get('/api/clients')
     return {
-      ...data,
-      data: data.data.map(item => clientService.transformFromEntity(item))
+      data: data.map((item: Entity) => clientService.transformFromEntity(item)),
+      status: 'success'
     }
   },
 
   getById: async (id: string): Promise<ApiResponse<Client>> => {
     const { data } = await api.get(`/api/clients/${id}`)
     return {
-      ...data,
-      data: clientService.transformFromEntity(data.data)
+      data: clientService.transformFromEntity(data)
     }
   },
 
@@ -44,8 +43,7 @@ export const clientApi = {
     const { data } = await api.post('/api/clients', entity)
     
     return {
-      ...data,
-      data: clientService.transformFromEntity(data.data)
+      data: clientService.transformFromEntity(data)
     }
   },
 

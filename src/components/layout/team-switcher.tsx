@@ -20,7 +20,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { getClientEntities, getProviderEntities, type Entity } from "@/lib/api/entities"
+import { clientApi } from "@/lib/http/services/client.api"
+import { providerApi } from "@/lib/http/services/provider.api"
+import { type Entity } from "@/lib/core/interfaces/repository.interfaces"
 import { useToast } from "@/components/ui/use-toast"
 
 export default function TeamSwitcher() {
@@ -37,13 +39,10 @@ export default function TeamSwitcher() {
     async function fetchEntities() {
       setLoading(true)
       try {
-        const [clientEntities, providerEntities] = await Promise.all([
-          getClientEntities(),
-          getProviderEntities()
-        ])
-        
-        setClients(clientEntities)
-        setProviders(providerEntities)
+        const { data: clientsData } = await clientApi.getAll()
+        const { data: providersData } = await providerApi.getAll()
+        setClients(clientsData || [])
+        setProviders(providersData || [])
       } catch (error) {
         console.error("Error fetching entities:", error)
         toast({

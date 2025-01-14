@@ -99,26 +99,24 @@ export const NODE_TYPES = {
 export interface Entity {
   id: string
   name: string
-  type: 'ADMIN' | 'AGENCY' | 'CLIENT' | 'PROVIDER' | null
-  metadata?: Record<string, any>
+  type: Database["public"]["Enums"]["ContextType"] | null
+  metadata: Json | null
+  status: string
   created_at: string
   updated_at: string
   deleted_at: string | null
   is_active: boolean
 }
 
-export interface Client {
-  id: string
-  name: string
-  document: string
-  email: string
-  phone: string | null
-  address: string | null
-  metadata?: Record<string, any>
-  created_at: string
-  updated_at: string
-  deleted_at: string | null
-  is_active: boolean
+export interface Client extends Entity {
+  type: typeof CONTEXT_TYPES.CLIENT
+  metadata: {
+    document: string
+    email: string
+    phone?: string | null
+    address?: string | null
+    [key: string]: any
+  }
 }
 
 export interface OrganizationalUnit extends OrganizationalUnitRow {}

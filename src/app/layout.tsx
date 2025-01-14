@@ -1,15 +1,13 @@
+import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import { Providers } from "@/components/providers"
-import { Toaster } from "@/components/ui/toaster"
-import { cookies } from "next/headers"
-
-import "@/app/globals.css"
+import "./globals.css"
+import { Providers } from "./providers"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Dedalo",
-  description: "Construtor de sistema agnóstico/whitelabel",
+  description: "Plataforma de gestão de processos",
 }
 
 export default function RootLayout({
@@ -17,18 +15,10 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Pega o tema do cookie no servidor
-  const cookieStore = cookies()
-  const theme = cookieStore.get("theme")
-  const initialTheme = theme?.value || "system"
-
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
-        <Providers defaultTheme={initialTheme}>
-          {children}
-        </Providers>
-        <Toaster />
+      <body className={inter.className}>
+        <Providers>{children}</Providers>
       </body>
     </html>
   )
