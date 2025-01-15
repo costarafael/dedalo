@@ -3,6 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Book } from "lucide-react"
 
 export type Module = {
   id: string
@@ -10,6 +11,7 @@ export type Module = {
   description: string | null
   version: number
   is_active: boolean
+  is_library: boolean
   created_at: string
   updated_at: string
 }
@@ -37,6 +39,15 @@ export const columns: ColumnDef<Module>[] = [
   {
     accessorKey: "name",
     header: "Nome",
+    cell: ({ row }) => {
+      const isLibrary = row.original.is_library
+      return (
+        <div className="flex items-center gap-2">
+          {isLibrary && <Book className="h-4 w-4 text-muted-foreground" />}
+          <span>{row.getValue("name")}</span>
+        </div>
+      )
+    }
   },
   {
     accessorKey: "description",

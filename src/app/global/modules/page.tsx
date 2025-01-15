@@ -1,41 +1,38 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { DataTable } from "@/components/ui/data-table"
 import { columns } from "./columns"
-import { getBrowserClient } from "@/lib/database/supabase"
 import { AddModuleDialog } from "./add-module-dialog"
-import type { Module } from "./columns"
+import { useModules } from "@/lib/http/hooks/use-modules"
 
 export default function ModulesPage() {
-  const [modules, setModules] = useState<Module[]>([])
+  const { modules, isLoading } = useModules()
 
-  useEffect(() => {
-    async function fetchModules() {
-      const supabase = getBrowserClient()
-      const { data, error } = await supabase
-        .from("modules")
-        .select("*")
-        .order("created_at", { ascending: false })
-
-      if (error) {
-        console.error("Error fetching modules:", error)
-        return
-      }
-
-      setModules(data || [])
-    }
-
-    fetchModules()
-  }, [])
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-10">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold">Módulos</h1>
+          <AddModuleDialog />
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Carregando módulos...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Módulos</h1>
+    <div className="container mx-auto py-10">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-bold">Módulos</h1>
         <AddModuleDialog />
       </div>
-      <DataTable columns={columns} data={modules} />
+
+      <DataTable
+        columns={columns}
+        data={modules}
+      />
     </div>
   )
 } 

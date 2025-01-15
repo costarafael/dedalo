@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -15,54 +14,44 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { getBrowserClient } from "@/lib/database/supabase"
-
-function slugify(text: string) {
-  return text
-    .toString()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/^-+/, '')
-    .replace(/-+$/, '')
-}
+import { useToast } from "@/components/ui/use-toast"
+import { useModules } from "@/lib/http/hooks/use-modules"
+import { createModuleData } from "@/lib/core/validations/module.validation"
 
 export function AddModuleDialog() {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
-  const router = useRouter()
+  const { create, isCreating } = useModules()
+  const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!name.trim()) return
-
-    const supabase = getBrowserClient()
-
-    const now = new Date().toISOString()
-    const moduleData = {
-      name,
-      slug: slugify(name),
-      version: 1,
-      is_active: true,
-      updated_at: now,
-      created_at: now
+    try {
+      create(createModuleData(name), {
+        onSuccess: () => {
+          setOpen(false)
+          setName("")
+          toast({
+            title: "Módulo criado",
+            description: "O módulo foi criado com sucesso."
+          })
+        },
+        onError: (error) => {
+          toast({
+            title: "Erro ao criar módulo",
+            description: error.message,
+            variant: "destructive"
+          })
+        }
+      })
+    } catch (error) {
+      toast({
+        title: "Erro de validação",
+        description: error instanceof Error ? error.message : "Erro ao validar dados do módulo",
+        variant: "destructive"
+      })
     }
-
-    const { error } = await supabase
-      .from("modules")
-      .insert([moduleData])
-
-    if (error) {
-      console.error("Error creating module:", error)
-      return
-    }
-
-    setOpen(false)
-    setName("")
-    router.refresh()
   }
 
   return (
@@ -78,7 +67,7 @@ export function AddModuleDialog() {
           <DialogHeader>
             <DialogTitle>Adicionar Módulo</DialogTitle>
             <DialogDescription>
-              Crie um novo módulo no sistema.
+              Crie um novo módulo na biblioteca do sistema.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -93,7 +82,9 @@ export function AddModuleDialog() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Adicionar Módulo</Button>
+            <Button type="submit" disabled={isCreating}>
+              {isCreating ? "Adicionando..." : "Adicionar Módulo"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

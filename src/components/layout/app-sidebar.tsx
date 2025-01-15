@@ -14,6 +14,7 @@ import {
   Files,
   Building,
   UserCog,
+  FormInput,
 } from "lucide-react"
 
 import { NavMain } from "@/components/layout/nav-main"
@@ -61,55 +62,15 @@ const data = {
   ],
   applications: [
     {
-      title: "Documentos",
+      title: "Form",
       url: "#",
-      icon: FileText,
+      icon: FormInput,
       items: [
         {
-          title: "Lista de documentos",
-          url: "#",
-        },
-        {
-          title: "Arquivos",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Serviços",
-      url: "#",
-      icon: Target,
-      items: [
-        {
-          title: "Catálogo",
-          url: "#",
-        },
-        {
-          title: "Pedidos",
-          url: "#",
-        },
-        {
-          title: "Relatórios",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Subproviders",
-      url: "#",
-      icon: Building,
-      items: [
-        {
-          title: "Lista",
-          url: "#",
-        },
-        {
-          title: "Documentos",
-          url: "#",
-        },
-        {
-          title: "Relatórios",
-          url: "#",
+          title: "Fields",
+          url: "/global/component-library/fields",
+          icon: FormInput,
+          items: []
         },
       ],
     },

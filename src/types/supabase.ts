@@ -76,45 +76,57 @@ export type Database = {
           category: Database["public"]["Enums"]["ComponentCategory"]
           config: Json
           created_at: string
+          default_label: string | null
           deleted_at: string | null
           description: string | null
           id: string
           is_active: boolean
           is_latest_version: boolean
+          is_required_by_default: boolean | null
+          is_unique_by_default: boolean | null
           metadata: Json | null
           name: string
-          type: Database["public"]["Enums"]["ComponentType"]
+          type: Database["public"]["Enums"]["componentfieldtype"]
           updated_at: string
+          validation: Json | null
           version: string
         }
         Insert: {
           category: Database["public"]["Enums"]["ComponentCategory"]
           config: Json
           created_at?: string
+          default_label?: string | null
           deleted_at?: string | null
           description?: string | null
           id?: string
           is_active?: boolean
           is_latest_version?: boolean
+          is_required_by_default?: boolean | null
+          is_unique_by_default?: boolean | null
           metadata?: Json | null
           name: string
-          type: Database["public"]["Enums"]["ComponentType"]
+          type: Database["public"]["Enums"]["componentfieldtype"]
           updated_at: string
+          validation?: Json | null
           version?: string
         }
         Update: {
           category?: Database["public"]["Enums"]["ComponentCategory"]
           config?: Json
           created_at?: string
+          default_label?: string | null
           deleted_at?: string | null
           description?: string | null
           id?: string
           is_active?: boolean
           is_latest_version?: boolean
+          is_required_by_default?: boolean | null
+          is_unique_by_default?: boolean | null
           metadata?: Json | null
           name?: string
-          type?: Database["public"]["Enums"]["ComponentType"]
+          type?: Database["public"]["Enums"]["componentfieldtype"]
           updated_at?: string
+          validation?: Json | null
           version?: string
         }
         Relationships: []
@@ -1608,6 +1620,8 @@ export type Database = {
       }
       template_fields: {
         Row: {
+          component_library_id: string | null
+          component_version: string | null
           config: Json
           created_at: string
           deleted_at: string | null
@@ -1619,11 +1633,13 @@ export type Database = {
           metadata: Json | null
           order: number
           template_id: string
-          type: Database["public"]["Enums"]["FieldType"]
+          type: Database["public"]["Enums"]["componentfieldtype"]
           updated_at: string
           validation: Json | null
         }
         Insert: {
+          component_library_id?: string | null
+          component_version?: string | null
           config: Json
           created_at?: string
           deleted_at?: string | null
@@ -1635,11 +1651,13 @@ export type Database = {
           metadata?: Json | null
           order?: number
           template_id: string
-          type: Database["public"]["Enums"]["FieldType"]
+          type: Database["public"]["Enums"]["componentfieldtype"]
           updated_at: string
           validation?: Json | null
         }
         Update: {
+          component_library_id?: string | null
+          component_version?: string | null
           config?: Json
           created_at?: string
           deleted_at?: string | null
@@ -1651,11 +1669,18 @@ export type Database = {
           metadata?: Json | null
           order?: number
           template_id?: string
-          type?: Database["public"]["Enums"]["FieldType"]
+          type?: Database["public"]["Enums"]["componentfieldtype"]
           updated_at?: string
           validation?: Json | null
         }
         Relationships: [
+          {
+            foreignKeyName: "template_fields_component_library_id_fkey"
+            columns: ["component_library_id"]
+            isOneToOne: false
+            referencedRelation: "component_library"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "template_fields_template_id_fkey"
             columns: ["template_id"]
@@ -2732,6 +2757,35 @@ export type Database = {
         | "NAVIGATION"
         | "UTILITY"
         | "SECURITY"
+        | "CUSTOM"
+      componentfieldtype:
+        | "TEXT"
+        | "TEXTAREA"
+        | "PASSWORD"
+        | "EMAIL"
+        | "URL"
+        | "NUMBER"
+        | "RATING"
+        | "SELECT"
+        | "MULTISELECT"
+        | "RADIO"
+        | "CHECKBOX"
+        | "DATE"
+        | "TIME"
+        | "DATETIME"
+        | "DATE_RANGE"
+        | "PHONE"
+        | "TEL"
+        | "FILE"
+        | "MULTIFILE"
+        | "SIGNATURE"
+        | "TOKEN_INPUT"
+        | "CODE_EDITOR"
+        | "CAMERA"
+        | "COLOR"
+        | "CPF"
+        | "CNPJ"
+        | "SWITCH"
         | "CUSTOM"
       ComponentType:
         | "FIELD"

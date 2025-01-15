@@ -1,0 +1,412 @@
+.
+├── README.md
+├── components.json
+├── eslint.config.mjs
+├── mermerd
+│   ├── LICENSE
+│   ├── Makefile
+│   ├── analyzer
+│   │   ├── analyzer.go
+│   │   ├── analyzer_test.go
+│   │   └── questioner.go
+│   ├── changelog.md
+│   ├── cmd
+│   │   ├── root.go
+│   │   └── version.go
+│   ├── config
+│   │   ├── config.go
+│   │   ├── config_test.go
+│   │   ├── output_mode.go
+│   │   └── relationship_label.go
+│   ├── database
+│   │   ├── connector.go
+│   │   ├── connector_factory.go
+│   │   ├── connector_factory_test.go
+│   │   ├── database_integration_test.go
+│   │   ├── mssql.go
+│   │   ├── mysql.go
+│   │   ├── mysql_test.go
+│   │   ├── postgres.go
+│   │   ├── postgres_test.go
+│   │   ├── result.go
+│   │   ├── result_test.go
+│   │   ├── sqlite.go
+│   │   ├── table_name_util.go
+│   │   ├── table_name_util_test.go
+│   │   ├── type.go
+│   │   ├── type_test.go
+│   │   ├── value_sanitizer.go
+│   │   └── value_sanitizer_test.go
+│   ├── diagram
+│   │   ├── diagram.go
+│   │   ├── diagram_data.go
+│   │   ├── diagram_util.go
+│   │   ├── diagram_util_test.go
+│   │   ├── erd_template.gommd
+│   │   ├── relationship_label_map.go
+│   │   └── relationship_label_map_test.go
+│   ├── exampleRunConfig.yaml
+│   ├── go.mod
+│   ├── go.sum
+│   ├── main.go
+│   ├── mermerd
+│   ├── mocks
+│   │   ├── Analyzer.go
+│   │   ├── Connector.go
+│   │   ├── ConnectorFactory.go
+│   │   ├── Diagram.go
+│   │   ├── LoadingSpinner.go
+│   │   ├── MermerdConfig.go
+│   │   ├── Questioner.go
+│   │   └── RelationshipLabelMap.go
+│   ├── presentation
+│   │   ├── info.go
+│   │   ├── intro.go
+│   │   ├── loading_spinner.go
+│   │   └── outro.go
+│   ├── readme.md
+│   ├── test
+│   │   ├── db-table-setup.sql
+│   │   ├── docker-compose.yaml
+│   │   ├── mssql
+│   │   │   ├── entrypoint.sh
+│   │   │   ├── mssql-enum-setup.sql
+│   │   │   ├── mssql-multiple-databases.sql
+│   │   │   └── mssql-setup.sql
+│   │   ├── mysql
+│   │   │   ├── mysql-enum-setup.sql
+│   │   │   └── mysql-multiple-databases.sql
+│   │   ├── postgres
+│   │   │   ├── postgres-enum-setup.sql
+│   │   │   ├── postgres-multiple-databases.sql
+│   │   │   └── postgres-not-unique-constraint-name.sql
+│   │   └── sqlite
+│   │       ├── sqlite-enum-setup.sql
+│   │       └── sqlite-multiple-databases.sql
+│   └── util
+│       ├── map_util.go
+│       └── map_util_test.go
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── referencia-field
+│   ├── create-component-form.tsx
+│   ├── edit-component-form.tsx
+│   └── field-preview.tsx
+├── schema.sql
+├── src
+│   ├── app
+│   │   ├── (auth)
+│   │   │   ├── login
+│   │   │   └── register
+│   │   ├── _lib
+│   │   │   └── seed.ts
+│   │   ├── api
+│   │   │   ├── clients
+│   │   │   │   ├── [id]
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── component-library
+│   │   │   │   ├── active
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── modules
+│   │   │   │   └── route.ts
+│   │   │   ├── providers
+│   │   │   │   ├── [id]
+│   │   │   │   │   └── route.ts
+│   │   │   │   ├── client
+│   │   │   │   │   └── [clientId]
+│   │   │   │   │       └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── template-fields
+│   │   │   │   ├── [id]
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── active
+│   │   │   └── templates
+│   │   │       └── route.ts
+│   │   ├── favicon.ico
+│   │   ├── global
+│   │   │   ├── clients
+│   │   │   │   ├── [id]
+│   │   │   │   │   ├── client-page-content.tsx
+│   │   │   │   │   ├── components
+│   │   │   │   │   │   ├── client-header.tsx
+│   │   │   │   │   │   ├── client-info-form.tsx
+│   │   │   │   │   │   ├── client-loading.tsx
+│   │   │   │   │   │   ├── client-not-found.tsx
+│   │   │   │   │   │   └── client-tabs.tsx
+│   │   │   │   │   ├── edit
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── hooks
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── columns.tsx
+│   │   │   │   ├── layout.tsx
+│   │   │   │   └── page.tsx
+│   │   │   ├── component-library
+│   │   │   │   ├── columns.tsx
+│   │   │   │   ├── fields
+│   │   │   │   │   ├── columns.tsx
+│   │   │   │   │   ├── new
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── new
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── page.tsx
+│   │   │   ├── components
+│   │   │   │   ├── client-list
+│   │   │   │   │   ├── client-card.tsx
+│   │   │   │   │   ├── client-list-content.tsx
+│   │   │   │   │   ├── client-list-error.tsx
+│   │   │   │   │   ├── client-list-skeleton.tsx
+│   │   │   │   │   ├── client-list.tsx
+│   │   │   │   │   └── use-clients.ts
+│   │   │   │   └── team-switcher.tsx
+│   │   │   ├── layout.tsx
+│   │   │   ├── library
+│   │   │   │   └── navigation
+│   │   │   │       └── add-component-dialog.tsx
+│   │   │   ├── modules
+│   │   │   │   ├── add-module-dialog.tsx
+│   │   │   │   ├── columns.tsx
+│   │   │   │   └── page.tsx
+│   │   │   ├── page.tsx
+│   │   │   ├── providers
+│   │   │   │   └── page.tsx
+│   │   │   └── template-fields
+│   │   │       └── new
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   ├── provider
+│   │   │   ├── [id]
+│   │   │   │   ├── layout.tsx
+│   │   │   │   └── page.tsx
+│   │   │   ├── layout.tsx
+│   │   │   └── page.tsx
+│   │   ├── providers.tsx
+│   │   ├── records
+│   │   │   └── page.tsx
+│   │   ├── sandbox-datatable
+│   │   │   └── page.tsx
+│   │   └── sponsor
+│   │       ├── [id]
+│   │       │   ├── layout.tsx
+│   │       │   └── page.tsx
+│   │       ├── layout.tsx
+│   │       └── page.tsx
+│   ├── components
+│   │   ├── clients
+│   │   ├── data-table
+│   │   │   ├── data-table-advanced-toolbar.tsx
+│   │   │   ├── data-table-column-header.tsx
+│   │   │   ├── data-table-faceted-filter.tsx
+│   │   │   ├── data-table-filter-list.tsx
+│   │   │   ├── data-table-floating-bar.tsx
+│   │   │   ├── data-table-loading.tsx
+│   │   │   ├── data-table-pagination.tsx
+│   │   │   ├── data-table-skeleton.tsx
+│   │   │   ├── data-table-sort-list.tsx
+│   │   │   ├── data-table-template.tsx
+│   │   │   ├── data-table-toolbar.tsx
+│   │   │   ├── data-table-view-options.tsx
+│   │   │   ├── data-table.ts
+│   │   │   ├── data-table.tsx
+│   │   │   ├── dynamic-data-table.tsx
+│   │   │   ├── filter-columns.ts
+│   │   │   └── table-feature-selector.tsx
+│   │   ├── data-view
+│   │   │   ├── data-card-view.tsx
+│   │   │   ├── data-view.tsx
+│   │   │   └── view-toggle.tsx
+│   │   ├── date-range-picker.tsx
+│   │   ├── dialogs
+│   │   │   ├── new-client-dialog.tsx
+│   │   │   └── new-provider-dialog.tsx
+│   │   ├── forms
+│   │   ├── icons copy.tsx
+│   │   ├── icons.tsx
+│   │   ├── kbd.tsx
+│   │   ├── layout
+│   │   │   ├── app-header.tsx
+│   │   │   ├── app-sidebar-provider.tsx
+│   │   │   ├── app-sidebar-sponsor.tsx
+│   │   │   ├── app-sidebar.tsx
+│   │   │   ├── mode-toggle.tsx
+│   │   │   ├── module-switcher.tsx
+│   │   │   ├── nav-main.tsx
+│   │   │   ├── nav-modules.tsx
+│   │   │   ├── nav-projects.tsx
+│   │   │   ├── nav-sections.tsx
+│   │   │   ├── nav-user.tsx
+│   │   │   ├── page-header.tsx
+│   │   │   ├── provider-header.tsx
+│   │   │   ├── provider-module-nav.tsx
+│   │   │   ├── provider-team-switcher.tsx
+│   │   │   ├── site-header.tsx
+│   │   │   └── team-switcher.tsx
+│   │   ├── organizational-units
+│   │   │   ├── excel-import-export.tsx
+│   │   │   ├── loading.tsx
+│   │   │   ├── node-list.tsx
+│   │   │   ├── organizational-units-manager.tsx
+│   │   │   └── unit-container-manager.tsx
+│   │   ├── providers.tsx
+│   │   ├── shell.tsx
+│   │   ├── tailwind-indicator.tsx
+│   │   ├── team-switcher.tsx
+│   │   ├── theme-provider.tsx
+│   │   └── ui
+│   │       ├── alert-dialog.tsx
+│   │       ├── avatar.tsx
+│   │       ├── badge.tsx
+│   │       ├── breadcrumb.tsx
+│   │       ├── button.tsx
+│   │       ├── calendar.tsx
+│   │       ├── card.tsx
+│   │       ├── checkbox.tsx
+│   │       ├── collapsible.tsx
+│   │       ├── command.tsx
+│   │       ├── data-table.tsx
+│   │       ├── dialog.tsx
+│   │       ├── drawer.tsx
+│   │       ├── dropdown-menu.tsx
+│   │       ├── faceted-filter.tsx
+│   │       ├── form.tsx
+│   │       ├── input.tsx
+│   │       ├── label.tsx
+│   │       ├── link.tsx
+│   │       ├── popover.tsx
+│   │       ├── portal.tsx
+│   │       ├── scroll-area.tsx
+│   │       ├── select.tsx
+│   │       ├── separator.tsx
+│   │       ├── sheet.tsx
+│   │       ├── sidebar.tsx
+│   │       ├── skeleton.tsx
+│   │       ├── sortable.tsx
+│   │       ├── switch.tsx
+│   │       ├── table.tsx
+│   │       ├── tabs.tsx
+│   │       ├── textarea.tsx
+│   │       ├── toast.tsx
+│   │       ├── toaster.tsx
+│   │       ├── toggle-group.tsx
+│   │       ├── toggle.tsx
+│   │       ├── tooltip.tsx
+│   │       ├── use-toast.ts
+│   │       └── visually-hidden.tsx
+│   ├── config
+│   │   ├── data-table.ts
+│   │   └── site.ts
+│   ├── hooks
+│   │   ├── use-callback-ref.ts
+│   │   ├── use-data-table.ts
+│   │   ├── use-debounce.ts
+│   │   ├── use-debounced-callback.ts
+│   │   ├── use-is-mobile.tsx
+│   │   ├── use-media-query.ts
+│   │   ├── use-query-string.ts
+│   │   ├── use-table-a11y.ts
+│   │   └── use-theme.ts
+│   ├── lib
+│   │   ├── config
+│   │   │   └── axios.config.ts
+│   │   ├── core
+│   │   │   ├── interfaces
+│   │   │   │   ├── component-library.interfaces.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── module.interfaces.ts
+│   │   │   │   ├── repository.interfaces.ts
+│   │   │   │   └── service.interfaces.ts
+│   │   │   ├── repositories
+│   │   │   │   ├── client.repository.ts
+│   │   │   │   ├── component-library.repository.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── module.repository.ts
+│   │   │   │   ├── node-hierarchy.repository.ts
+│   │   │   │   ├── node.repository.ts
+│   │   │   │   ├── provider.repository.ts
+│   │   │   │   ├── unit-container.repository.ts
+│   │   │   │   ├── unit-hierarchy.repository.ts
+│   │   │   │   └── unit.repository.ts
+│   │   │   ├── services
+│   │   │   │   ├── client.service.ts
+│   │   │   │   ├── component-library.service.ts
+│   │   │   │   ├── excel.service.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── module.service.ts
+│   │   │   │   ├── node-hierarchy.service.ts
+│   │   │   │   ├── node.service.ts
+│   │   │   │   ├── provider.service.ts
+│   │   │   │   ├── query-keys.ts
+│   │   │   │   ├── template-field.service.ts
+│   │   │   │   ├── unit-container.service.ts
+│   │   │   │   └── unit.service.ts
+│   │   │   └── validations
+│   │   │       ├── client.validation.ts
+│   │   │       ├── component-library.validation.ts
+│   │   │       ├── module.validation.ts
+│   │   │       └── template-field.validation.ts
+│   │   ├── database
+│   │   │   └── supabase.ts
+│   │   ├── hooks
+│   │   │   └── use-component-library.ts
+│   │   ├── http
+│   │   │   ├── clients
+│   │   │   │   └── index.ts
+│   │   │   ├── config
+│   │   │   │   └── axios.config.ts
+│   │   │   ├── hooks
+│   │   │   │   ├── use-clients.ts
+│   │   │   │   ├── use-modules.ts
+│   │   │   │   ├── use-node-hierarchies.ts
+│   │   │   │   ├── use-organizational-units.ts
+│   │   │   │   └── use-providers.ts
+│   │   │   ├── interceptors
+│   │   │   │   └── auth.interceptor.ts
+│   │   │   ├── services
+│   │   │   │   ├── client.api.ts
+│   │   │   │   ├── component-library.service.ts
+│   │   │   │   ├── module.api.ts
+│   │   │   │   ├── node-hierarchy.api.ts
+│   │   │   │   ├── node.api.ts
+│   │   │   │   ├── provider.api.ts
+│   │   │   │   ├── unit-container.api.ts
+│   │   │   │   ├── unit-hierarchy.api.ts
+│   │   │   │   └── unit.api.ts
+│   │   │   └── types
+│   │   │       └── api.types.ts
+│   │   ├── index.ts
+│   │   ├── utils
+│   │   │   ├── compose-refs.ts
+│   │   │   ├── constants.ts
+│   │   │   ├── export.ts
+│   │   │   ├── handle-error.ts
+│   │   │   ├── index.ts
+│   │   │   ├── parsers.ts
+│   │   │   ├── unstable-cache.ts
+│   │   │   └── utils.ts
+│   │   └── validations
+│   ├── middleware.ts
+│   ├── mocks
+│   │   └── browser.ts
+│   └── types
+│       ├── index.ts
+│       └── supabase.ts
+├── supabase
+│   └── config.toml
+├── supabase-erd.mmd
+├── tailwind.config.ts
+├── tree.txt
+└── tsconfig.json
+
+93 directories, 317 files
